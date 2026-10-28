@@ -641,6 +641,14 @@ ${cfg.diag}
     const promptText = ideatorInput.value.trim();
     if (!promptText) return;
 
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    let guestChatCount = parseInt(localStorage.getItem('guest_chat_count') || '0', 10);
+    if (!isLoggedIn && guestChatCount >= 2) {
+      window.pendingChatPrompt = promptText;
+      showLoginModal('💬 오드리 AI 마케팅 비서와의 무제한 1:1 상담은 <strong>무료 회원 전용</strong>입니다.<br>3초 간편가입 후 질문에 대한 전문 답변을 즉시 확인하세요!', 'register');
+      return;
+    }
+
     if (ideatorResponse.innerHTML.includes('chat-welcome-container')) {
       ideatorResponse.innerHTML = '';
     }
@@ -739,6 +747,11 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         session.messages.push({ role: 'ai', content: content });
         saveChatSessions();
         renderChatHistoryList();
+      }
+
+      if (!isLoggedIn) {
+        guestChatCount++;
+        localStorage.setItem('guest_chat_count', guestChatCount.toString());
       }
     } catch (err) {
       console.error(err);
@@ -2026,6 +2039,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   if (btnCopyChannelContent) {
     btnCopyChannelContent.addEventListener('click', () => {
       if (!activePageData || !activePageData.sections) return;
+      const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+      if (!isLoggedIn) {
+        window.pendingCopyChannel = true;
+        showLoginModal('📋 채널별 전체 AI 프롬프트 및 원고 패키지 일괄 복사는 <strong>무료 회원 전용 기능</strong>입니다.<br>3초 간편가입 후 모든 채널 원고를 무제한 복사해 가세요!', 'register');
+        return;
+      }
       const fullText = `[${activePageData.page_name}]\n\n` + activePageData.sections.map(s => `■ ${s.name}\n${s.guide}`).join('\n\n');
       navigator.clipboard.writeText(fullText).then(() => {
         const origText = btnCopyChannelContent.textContent;
@@ -2039,6 +2058,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   if (btnCopyBrandStory) {
     btnCopyBrandStory.addEventListener('click', () => {
       if (!activeTableData || !activeTableData.fields) return;
+      const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+      if (!isLoggedIn) {
+        window.pendingCopyStory = true;
+        showLoginModal('📖 우리 비즈니스 맞춤 브랜드 스토리 전체 복사는 <strong>무료 회원 전용 기능</strong>입니다.<br>3초 간편가입 후 전체 스토리를 복사해 가세요!', 'register');
+        return;
+      }
       const fullStoryText = `[${activeTableData.collection_name}]\n\n` + activeTableData.fields.map(f => `■ ${f.field_name} (${f.type})\n${f.description}`).join('\n\n');
       navigator.clipboard.writeText(fullStoryText).then(() => {
         const origText = btnCopyBrandStory.textContent;
@@ -2149,13 +2174,25 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     const target = document.getElementById('input-target').value.trim();
     const revenue = document.getElementById('input-revenue').value.trim();
     
+    if (!brand || !idea || !region || !target || !revenue) return;
+
+    // Gating for 2nd generation: 1st generation is 100% free for guests!
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    let guestGenCount = parseInt(localStorage.getItem('guest_gen_count') || '0', 10);
+
+    if (!isLoggedIn && guestGenCount >= 1) {
+      window.pendingGenerationAction = () => {
+        btnGenerate.click();
+      };
+      showLoginModal('🎉 대표님의 첫 번째 마케팅 전략이 성공적으로 설계되었습니다!<br>새로운 마케팅 전략 추가 분석 및 무제한 이용을 위해 <strong>3초 무료 간편가입</strong>을 완료해 주세요.', 'register');
+      return;
+    }
+    
     const provider = localStorage.getItem('ai_provider') || 'local';
     const geminiKey = localStorage.getItem('gemini_api_key');
     const geminiModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
     const openaiKey = localStorage.getItem('openai_api_key');
     const openaiModel = localStorage.getItem('openai_model') || 'gpt-4o';
-
-    if (!brand || !idea || !region || !target || !revenue) return;
     
     btnGenerate.disabled = true;
     btnGenerate.style.opacity = '0.7';
@@ -2196,6 +2233,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         
         renderBlueprint(blueprintResult, brand, category, idea, region, target);
         addBlueprintToArchive(brand, category, idea, region, target, revenue, blueprintResult);
+
+        if (!isLoggedIn) {
+          guestGenCount++;
+          localStorage.setItem('guest_gen_count', guestGenCount.toString());
+        }
+
         resultsDashboard.scrollIntoView({ behavior: 'smooth' });
         
       } catch (err) {
@@ -2210,6 +2253,11 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // --- Copy Strategy JSON to Clipboard ---
   btnCopyJson.addEventListener('click', () => {
     if (!generatedData) return;
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    if (!isLoggedIn) {
+      showLoginModal('전체 마케팅 전략 데이터 복사는 <strong>무료 회원 전용</strong>입니다.<br>3초 간편가입 후 즉시 이용해 보세요.', 'register');
+      return;
+    }
     
     const jsonStr = JSON.stringify(generatedData, null, 2);
     navigator.clipboard.writeText(jsonStr)
@@ -2224,6 +2272,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // --- Save to Archive & Export JSON File ---
   btnExportJson.addEventListener('click', () => {
     if (!generatedData) return;
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    if (!isLoggedIn) {
+      window.pendingSaveArchive = true;
+      showLoginModal('🗂️ 분석한 마케팅 전략이 사라지지 않도록 <strong>대표님 계정 보관함에 안전하게 저장</strong>하세요.<br>무료 회원가입 후 언제든 다시 불러올 수 있습니다.', 'register');
+      return;
+    }
     
     const brand = (document.getElementById('input-brand')?.value || '오드리고깃집').trim();
     const category = getResolvedCategory();
@@ -2242,6 +2296,13 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     btnDownloadPdf.addEventListener('click', () => {
       if (!generatedData) {
         alert('마케팅 전략이 아직 생성되지 않았습니다. 먼저 좌측 폼을 입력해 전략을 생성해 주세요.');
+        return;
+      }
+
+      const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+      if (!isLoggedIn) {
+        window.pendingDownloadPdf = true;
+        showLoginModal('📄 마케팅 전략서 <strong>A4 리포트 인쇄 및 평생 소장(PDF)</strong>은 무료 회원 전용 기능입니다.<br>3초 간편가입 즉시 무료로 인쇄·출력하실 수 있습니다.', 'register');
         return;
       }
       
@@ -2517,6 +2578,48 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       provider: localStorage.getItem('user_provider') || 'email',
       createdAt: localStorage.getItem('user_created_at') || '2026-10-28'
     };
+  }
+
+  function triggerPendingAuthActions() {
+    if (window.pendingGenerationAction) {
+      const act = window.pendingGenerationAction;
+      window.pendingGenerationAction = null;
+      setTimeout(() => act(), 250);
+    }
+    if (window.pendingChatPrompt) {
+      const prompt = window.pendingChatPrompt;
+      window.pendingChatPrompt = null;
+      const input = document.getElementById('ideator-input');
+      const btn = document.getElementById('btn-discuss-idea');
+      if (input && btn) {
+        input.value = prompt;
+        setTimeout(() => btn.click(), 250);
+      }
+    }
+    if (window.pendingDownloadPdf) {
+      window.pendingDownloadPdf = false;
+      const pdfBtn = document.getElementById('btn-download-pdf');
+      if (pdfBtn) setTimeout(() => pdfBtn.click(), 250);
+    }
+    if (window.pendingSaveArchive) {
+      window.pendingSaveArchive = false;
+      setTimeout(() => window.saveCurrentToArchive(), 250);
+    }
+    if (window.pendingCopyChannel) {
+      window.pendingCopyChannel = false;
+      const copyBtn = document.getElementById('btn-copy-channel-content');
+      if (copyBtn) setTimeout(() => copyBtn.click(), 250);
+    }
+    if (window.pendingCopyStory) {
+      window.pendingCopyStory = false;
+      const copyStoryBtn = document.getElementById('btn-copy-brand-story');
+      if (copyStoryBtn) setTimeout(() => copyStoryBtn.click(), 250);
+    }
+    if (window.pendingNewChatAction) {
+      const act = window.pendingNewChatAction;
+      window.pendingNewChatAction = null;
+      setTimeout(() => act(), 250);
+    }
   }
 
   function setLoggedInSession(user, token = '') {
@@ -2875,6 +2978,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   };
 
   window.saveCurrentToArchive = function() {
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    if (!isLoggedIn) {
+      window.pendingSaveArchive = true;
+      showLoginModal('🗂️ 분석한 마케팅 전략이 사라지지 않도록 <strong>대표님 계정 보관함에 안전하게 저장</strong>하세요.<br>무료 회원가입 후 언제든 다시 불러올 수 있습니다.', 'register');
+      return;
+    }
     const brand = (document.getElementById('input-brand')?.value || '오드리고깃집').trim();
     const category = getResolvedCategory();
     const idea = (document.getElementById('input-idea')?.value || '14일 저온숙성 통삼겹·목살 한판 & 한우 된장찌개 세트').trim();
@@ -3085,11 +3194,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         registerForm.reset();
         if (emailCheckMsg) emailCheckMsg.style.display = 'none';
         closeLoginModal();
-
-        if (window.pendingNewChatAction) {
-          window.pendingNewChatAction();
-          window.pendingNewChatAction = null;
-        }
+        triggerPendingAuthActions();
       }, 650);
     });
   }
@@ -3135,10 +3240,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     saveLocalUserRecord(socialUser);
     setLoggedInSession(socialUser, token);
     closeLoginModal();
-    if (window.pendingNewChatAction) {
-      window.pendingNewChatAction();
-      window.pendingNewChatAction = null;
-    }
+    triggerPendingAuthActions();
   }
 
   function openSocialLoginPopup(providerLabel, brandColor, textColor, defaultName) {
@@ -3404,10 +3506,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       setTimeout(() => {
         if (btnSubmitLogin) btnSubmitLogin.disabled = false;
         closeLoginModal();
-        if (window.pendingNewChatAction) {
-          window.pendingNewChatAction();
-          window.pendingNewChatAction = null;
-        }
+        triggerPendingAuthActions();
       }, 450);
     });
   }
