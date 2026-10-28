@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketingMap - 대한민국 모든 대표님의 비즈니스 성장을 위한 AI 마케팅 솔루션</title>
+  <!-- Google Fonts: Outfit (modern sans-serif) and JetBrains Mono (monospace) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css?v=20261028_10">
+</head>
+<body>
+  <!-- Background Glow Effects -->
+  <div class="glow-bg">
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#111111"/>
+              <stop offset="1" stop-color="#ff6b00"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="logo-text">
+          <h1>MarketingMap</h1>
+          <span class="logo-badge">AI Marketing Studio</span>
+        </div>
+      </div>
+
+      <nav class="top-nav">
+        <a href="#about" id="nav-about" class="nav-link">ABOUT</a>
+        <span class="nav-divider">|</span>
+        <a href="#blueprints" id="nav-blueprints" class="nav-link">보관함 <span id="archive-count-badge" class="nav-count-badge">1</span></a>
+        <span class="nav-divider">|</span>
+        <a href="#pricing" id="nav-pricing" class="nav-link">요금제</a>
+        <span class="nav-divider">|</span>
+        <a href="#support" id="nav-support" class="nav-link">고객센터</a>
+        <span class="nav-divider">|</span>
+        <div id="auth-nav-container" class="auth-nav-container">
+          <a href="#login" id="nav-login" class="nav-link">로그인</a>
+          <span class="nav-divider">|</span>
+          <a href="#register" id="nav-register" class="nav-link nav-link-highlight">회원가입</a>
+        </div>
+      </nav>
+
+      <div class="header-actions">
+        <div class="agent-status">
+          <span class="status-dot animate-pulse"></span>
+          <span class="status-text">Audrey AI Online</span>
+        </div>
+        <button id="btn-settings" class="btn-icon" title="AI 엔진 및 API 키 설정">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-layout">
+      <!-- App Sidebar (Dedicated Far Left Panel) -->
+      <aside class="app-sidebar" id="app-sidebar">
+        <button id="btn-new-chat" class="btn-new-chat" type="button" title="새 상담 시작">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span class="sidebar-text">새 상담 시작</span>
+        </button>
+        <div class="chat-search-container">
+          <input type="text" id="chat-search" placeholder="상담 내역 검색...">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <div class="chat-history-container">
+          <div class="history-label sidebar-text">최근 상담 이력</div>
+          <div id="chat-history-list" class="chat-history-list">
+            <!-- Generated dynamically -->
+          </div>
+        </div>
+      </aside>
+      <!-- Left Column: Input Form -->
+      <section class="form-container glass-panel">
+        <div class="panel-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          <h2>MarketingMap Studio</h2>
+        </div>
+        <p class="panel-subtitle">
+          <strong>장사하는 '사장님'에서, 시스템을 가진 '사업가'까지.</strong>
+          <span>대한민국 모든 대표님의 비즈니스 성장을 위한 AI 마케팅 솔루션</span>
+        </p>
+        
+        <!-- AI Ideator Section -->
+        <div class="ideator-section">
+          <div class="ideator-header">
+            <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" title="상담 이력 열기/닫기" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;">
+              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .3 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+              <line x1="9" y1="18" x2="15" y2="18"></line>
+              <line x1="10" y1="22" x2="14" y2="22"></line>
+            </svg>
+            <h3>우리 비즈니스 맞춤 마케팅 빠른 상담</h3>
+          </div>
+          <div class="ideator-body">
+            <div id="ideator-response" class="ideator-response-box">
+              <div class="chat-welcome-container">
+                <div class="welcome-header">
+                  <div class="welcome-avatar">A</div>
+                  <h4>오드리 AI 마케팅 비서와 상담을 시작합니다</h4>
+                  <p>우리 비즈니스 홍보 고민을 아래 입력창에 질문하시거나,<br>추천 카드를 클릭해 바로 적용 가능한 마케팅 비법을 받아보세요.</p>
+                </div>
+                <div class="quick-prompt-cards">
+                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('중계동 고깃집(오드리고깃집)처럼 외식·프랜차이즈·로컬 비즈니스 고객 유입을 늘리고 네이버 플레이스 순위와 재방문율을 올리는 실전 마케팅 전략 추천해줘')">
+                    <div class="quick-card-icon">🥩</div>
+                    <div class="quick-card-text">
+                      <strong>외식 · 프랜차이즈 · 로컬 비즈니스</strong>
+                      <span>플레이스 상위노출 & 가족·모임 단골 확보 전략</span>
+                    </div>
+                  </button>
+                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('병의원, 부동산, 뷰티, 교육 등 예약·상담 중심 비즈니스에서 지역 핵심 키워드 장악과 신규 상담·예약을 늘리는 마케팅 전략 추천해줘')">
+                    <div class="quick-card-icon">🏥</div>
+                    <div class="quick-card-text">
+                      <strong>병의원 · 부동산 · 뷰티 · 예약 비즈니스</strong>
+                      <span>지역 핵심 검색어 선점 & 신규 상담·예약 전환 전략</span>
+                    </div>
+                  </button>
+                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('이커머스 브랜드, 제조업, B2B 전문 기업이 검색 SEO와 설득력 있는 콘텐츠로 구매 전환율 및 B2B 문의를 높이는 전략 추천해줘')">
+                    <div class="quick-card-icon">🏭</div>
+                    <div class="quick-card-text">
+                      <strong>이커머스 · 제조 · B2B · 전문 브랜드</strong>
+                      <span>검색 키워드 유입 & 상세페이지·도입 문의 전환 전략</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="ideator-input-container">
+              <input type="text" id="ideator-input" placeholder="예: 중계동 고깃집 재방문율 높이는 이벤트 추천해줘">
+              <button id="btn-discuss-idea" type="button" class="btn-send-icon" title="마케팅 질문 전송">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <form id="blueprint-form">
+          <div class="form-row-2col">
+            <div class="input-group">
+              <label for="input-brand">상호명 (브랜드명) <span class="required">*</span></label>
+              <input type="text" id="input-brand" placeholder="예: 오드리고깃집" required>
+            </div>
+            <div class="input-group">
+              <label for="input-category">업종 분류 <span class="required">*</span></label>
+              <select id="input-category">
+                <option value="외식/카페/프랜차이즈">🍽️ 외식 · 카페 · 프랜차이즈</option>
+                <option value="병의원/헬스케어/약국">🏥 병의원 · 치과 · 한의원 · 헬스케어</option>
+                <option value="부동산/건설/인테리어">🏢 부동산 · 분양 · 인테리어 · 시공</option>
+                <option value="제조/유통/B2B산업">🏭 제조 · 유통 · OEM · B2B 산업</option>
+                <option value="이커머스/브랜드/유통">📦 이커머스 · D2C 브랜드 · 쇼핑몰</option>
+                <option value="뷰티/에스테틱/웰니스">💅 뷰티 · 헤어 · 에스테틱 · 웰니스</option>
+                <option value="교육/학원/스포츠/문화">🎓 교육 · 학원 · 피트니스 · 스튜디오</option>
+                <option value="전문서비스/컨설팅/IT">💼 전문서비스 · 세무/법무 · 컨설팅 · IT</option>
+                <option value="기타 (직접 입력)">✏️ 기타 업종 (직접 입력)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="custom-category-group" class="input-group custom-category-group hidden">
+            <label for="input-category-custom">상세 업종 직접 입력 <span class="required">*</span></label>
+            <input type="text" id="input-category-custom" placeholder="예: 반려동물 케어 서비스 / 친환경 패키징 제조 / 물류 자동화 솔루션 등">
+            <div class="input-helper">※ 분류하기 애매한 특수 업종이나 복합 비즈니스 형태를 자유롭게 적어주세요.</div>
+          </div>
+
+          <div class="input-group">
+            <label for="input-idea">주력 메뉴 / 판매 상품 · 서비스 <span class="required">*</span></label>
+            <input type="text" id="input-idea" placeholder="예: 14일 저온숙성 통삼겹·목살 한판 & 한우 된장찌개 세트" required>
+            <div class="input-helper">※ 고객에게 가장 자신 있게 내세우는 대표 메뉴나 주력 상품을 입력해 주세요.</div>
+          </div>
+
+          <div class="input-group">
+            <label for="input-region">지역 (상권) 또는 주력 판매 채널 <span class="required">*</span></label>
+            <input type="text" id="input-region" placeholder="예: 서울 노원구 중계동 은행사거리 학원가·아파트 배후 상권" required>
+            <div class="input-helper">※ 비즈니스가 위치한 동네·상권 특징이나 주력 온라인 판매 채널을 적어주세요.</div>
+          </div>
+
+          <div class="input-group">
+            <label for="input-target">우리 비즈니스 강점(차별점) & 주요 고객층 <span class="required">*</span></label>
+            <input type="text" id="input-target" placeholder="예: 직원이 직접 구워주는 그릴링 서비스, 단체룸 완비 / 주말 가족 외식 및 중계동 주민" required>
+            <div class="input-helper">※ 경쟁 비즈니스 대비 우리만의 매력 포인트와 핵심 타깃 고객층을 적어주세요.</div>
+          </div>
+
+          <div class="input-group">
+            <label for="input-revenue">현재 가장 시급한 고민 & 월 마케팅 예산 <span class="required">*</span></label>
+            <div class="goal-chips-row">
+              <button type="button" class="goal-chip" onclick="window.selectGoalChip('네이버 플레이스 상위노출')">🔥 플레이스 상위노출</button>
+              <button type="button" class="goal-chip" onclick="window.selectGoalChip('신규 손님/예약 유입')">👣 신규 손님 유입</button>
+              <button type="button" class="goal-chip" onclick="window.selectGoalChip('단골 확보 및 재방문율 상승')">🔄 단골/재방문</button>
+              <button type="button" class="goal-chip" onclick="window.selectGoalChip('인스타 릴스·블로그 홍보')">📱 SNS·블로그 홍보</button>
+              <button type="button" class="goal-chip" onclick="window.selectGoalChip('광고비 0원 무자본 마케팅')">💸 예산 0원(무자본)</button>
+            </div>
+            <input type="text" id="input-revenue" placeholder="예: 광고비 0원으로 중계동 고깃집 네이버 플레이스 상위노출 및 가족 단골 재방문율 상승" required>
+            <div class="input-helper">※ 위 키워드 칩을 누르거나 현재 가장 해결하고 싶은 고민과 예산을 적어주세요.</div>
+          </div>
+
+          <button type="submit" id="btn-generate">
+            <span>우리 비즈니스 맞춤 마케팅 전략 생성 (MarketingMap)</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Draggable Splitter Handle -->
+      <div id="layout-resizer" class="layout-resizer">
+        <div class="resizer-handle">
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Results Dashboard / Preview -->
+      <section class="results-container">
+        <!-- Default State: Preview Placeholder -->
+        <div id="results-placeholder" class="glass-panel placeholder-panel">
+          <div class="placeholder-content">
+            <div class="placeholder-badge-top">AI MARKETING BLUEPRINT ENGINE</div>
+            <div class="placeholder-icon-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.28"></circle>
+                <line x1="12" y1="3.8" x2="12" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.45"></line>
+                <line x1="12" y1="19" x2="12" y2="20.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.45"></line>
+                <line x1="3.8" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.45"></line>
+                <line x1="19" y1="12" x2="20.2" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.45"></line>
+                <!-- Hour hand -->
+                <line id="hour-hand" x1="12" y1="12" x2="12" y2="7.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+                <!-- Minute hand -->
+                <line id="minute-hand" x1="12" y1="12" x2="12" y2="4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></line>
+                <!-- Center pin -->
+                <circle cx="12" cy="12" r="1.1" fill="currentColor"></circle>
+              </svg>
+            </div>
+            <h3>맞춤 마케팅 전략 설계 대기 중</h3>
+            <p class="placeholder-lead">
+              좌측에 <strong>상호명, 업종·주력 상품, 지역(상권), 비즈니스 강점, 마케팅 고민</strong>을 입력하시면<br>
+              우리 비즈니스에 최적화된 <strong>5대 실전 마케팅 리포트</strong>가 이 화면에 즉시 생성됩니다.
+            </p>
+
+            <div class="placeholder-preview-grid">
+              <div class="placeholder-preview-item full-span highlight-3tai-preview">
+                <span class="preview-num" style="background: linear-gradient(135deg, #18181b, #ff6b00); color: #fff;">3TAI</span>
+                <div class="preview-txt">
+                  <strong>이영현 교수의 5단계 마케팅 로드맵 (3TAI 전략)</strong>
+                  <span>1. 계기(Trigger: SNS 접점) → 2. 목표(Target: 포털·AI 검색) → 3. 생각(Thinking: 브랜드 검증) → 4. 실행(Action: 구매 전환) → 5. 자기성찰(Introspection: 후기 작성)</span>
+                </div>
+              </div>
+              <div class="placeholder-preview-item">
+                <span class="preview-num">01</span>
+                <div class="preview-txt">
+                  <strong>검색 & 플레이스 (SEO)</strong>
+                  <span>지역·업종 황금 키워드 8선 및 플레이스 소개글 설계</span>
+                </div>
+              </div>
+              <div class="placeholder-preview-item">
+                <span class="preview-num">02</span>
+                <div class="preview-txt">
+                  <strong>AI 검색 추천 (GEO)</strong>
+                  <span>챗GPT·네이버 AI 브리핑 1순위 추천 유도 문답(Q&A)</span>
+                </div>
+              </div>
+              <div class="placeholder-preview-item">
+                <span class="preview-num">03</span>
+                <div class="preview-txt">
+                  <strong>경쟁사 및 자사 브랜드 분석</strong>
+                  <span>1. SWOT 분석 · 2. BCG 매트릭스(Growth-Share Matrix) · 3. 위치 매핑(Perceptual Mapping)</span>
+                </div>
+              </div>
+              <div class="placeholder-preview-item">
+                <span class="preview-num">04</span>
+                <div class="preview-txt">
+                  <strong>홍보 채널 마케팅 맵 & 생성형 AI</strong>
+                  <span>유튜브·블로그(AEO·GEO)·인스타·플레이스별 AI 활용 및 바로가기</span>
+                </div>
+              </div>
+              <div class="placeholder-preview-item full-span">
+                <span class="preview-num">05</span>
+                <div class="preview-txt">
+                  <strong>우리 비즈니스 브랜드 스토리 (Brand Story) & 전략서 PDF 출력</strong>
+                  <span>고객을 팬으로 만드는 맞춤형 브랜드 스토리 예시 제안 및 보관함 저장 · 인쇄용 PDF 다운로드 지원</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="placeholder-actions-row">
+              <div class="engine-indicator">
+                <span class="indicator-dot active"></span>
+                <span id="engine-type-text">Audrey Local Marketing Engine Ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard View (Hidden by default) -->
+        <div id="results-dashboard" class="dashboard-panel hidden">
+          <!-- Quick Status Header -->
+          <div class="dashboard-header glass-panel">
+            <div class="header-info">
+              <div class="project-title-row">
+                <span class="project-tag">MARKETING BLUEPRINT</span>
+                <h3 id="display-project-name">오드리고깃집 (음식점/카페/베이커리)</h3>
+              </div>
+              <p id="display-project-target" class="project-sub">지역/채널: 서울 노원구 중계동 은행사거리 상권 | 핵심 타깃: 주말 가족 외식 및 중계동 주민</p>
+            </div>
+            <div class="header-actions">
+              <!-- Blue PDF Download Button -->
+              <button id="btn-download-pdf" class="btn-blue" title="마케팅 전략서 PDF 다운로드">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg" style="width: 14px; height: 14px;">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>전략서 PDF 다운로드</span>
+              </button>
+              <button id="btn-copy-json" class="btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-svg">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>전체 전략 복사</span>
+              </button>
+              <button id="btn-export-json" class="btn-primary-sm" title="보관함에 저장 및 JSON 백업">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-svg">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>보관함 저장</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <nav class="dashboard-tabs">
+            <button class="tab-btn active" data-tab="seo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>검색 & 플레이스 (SEO)</span>
+            </button>
+            <button class="tab-btn" data-tab="geo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              <span>AI 검색 추천 (GEO)</span>
+            </button>
+            <button class="tab-btn" data-tab="market">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 20V10"></path>
+                <path d="M12 20V4"></path>
+                <path d="M6 20V14"></path>
+              </svg>
+              <span>경쟁사 및 자사 브랜드 분석</span>
+            </button>
+            <button class="tab-btn" data-tab="ia">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z"></path>
+                <path d="M2 17L12 22L22 17"></path>
+                <path d="M2 12L12 17L22 12"></path>
+              </svg>
+              <span>채널별 홍보 & AI 활용</span>
+            </button>
+            <button class="tab-btn" data-tab="db">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <span>브랜드 스토리</span>
+            </button>
+          </nav>
+
+          <!-- Tab Contents -->
+          <div class="tab-viewport">
+            <!-- TAB 1: SEO & Place Marketing -->
+            <div id="tab-content-seo" class="tab-pane active glass-panel">
+
+              <div class="card-section">
+                <h4 class="section-title">타깃 손님 결핍(Pain Point) & 우리 비즈니스 방문 명분</h4>
+                <div id="seo-pain-point" class="card-bubble">
+                  타깃 손님의 결핍 및 방문 명분 분석 로딩 중...
+                </div>
+              </div>
+
+              <div class="card-section">
+                <h4 class="section-title">네이버 플레이스 · 블로그 · 인스타 황금 키워드 (클릭 시 복사)</h4>
+                <div id="seo-keywords" class="keyword-chips-container">
+                  <!-- Chips will be generated here -->
+                </div>
+                <p class="section-desc">네이버 스마트플레이스 대표 키워드, 블로그 제목, 인스타그램 해시태그에 바로 넣어야 할 유효 검색량 높은 핵심 키워드입니다. 칩을 클릭하면 즉시 복사됩니다.</p>
+              </div>
+
+              <div class="card-section">
+                <h4 class="section-title">네이버 플레이스 & 포털 검색 노출 최적화 프리뷰</h4>
+                <div class="google-snippet-card">
+                  <div class="google-url-row">
+                    <span class="google-url">https://map.naver.com/p/entry/place/<span id="google-preview-slug">store</span></span>
+                  </div>
+                  <h3 id="google-preview-title" class="google-title">플레이스 & 검색 대표 타이틀 로딩 중...</h3>
+                  <p id="google-preview-desc" class="google-desc">플레이스 상세 소개글 및 검색 요약 문구 로딩 중...</p>
+                </div>
+              </div>
+
+              <div class="card-section">
+                <h4 class="section-title">이영현 교수의 5단계 마케팅 로드맵 (3TAI 전략)</h4>
+                <p class="section-desc">소비자가 SNS에서 서비스를 처음 만나는 <strong>계기(Trigger)</strong>부터 포털·AI에 검색하는 <strong>목표(Target)</strong>, 브랜드를 검증하는 <strong>생각(Thinking)</strong>, 서비스를 구매하는 <strong>실행(Action)</strong>, 그리고 후기를 작성하는 <strong>자기성찰(Introspection)</strong>까지의 5단계 심리 전환 설계도입니다.</p>
+                <div id="seo-funnel" class="funnel-container">
+                  <!-- Funnel steps generated here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 1-2: GEO (Generative Engine Optimization) -->
+            <div id="tab-content-geo" class="tab-pane glass-panel">
+              <div class="card-section">
+                <h4 class="section-title">AI 검색(ChatGPT · 네이버 AI 브리핑 · 제미나이) 우리 비즈니스 추천 유도 Q&A</h4>
+                <p class="section-desc">요즘 고객들은 AI에게 <strong>"중계동 은행사거리에서 가족 외식하기 좋은 숙성 고깃집 추천해줘"</strong>처럼 구체적으로 질문합니다. 네이버 플레이스 '상세 설명', 블로그 포스팅, 인스타그램 본문에 아래 문답(Q&A)을 자연스럽게 녹여두면 AI 검색이 우리 비즈니스를 1순위로 추천할 확률이 대폭 높아집니다.</p>
+                <div id="geo-qa-container" class="geo-qa-list">
+                  <!-- QA pairs will be generated here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: 경쟁사 및 자사 브랜드 분석 (1. SWOT 분석 · 2. BCG 매트릭스(Growth-Share Matrix) · 3. 위치 매핑(Perceptual Mapping)) -->
+            <div id="tab-content-market" class="tab-pane glass-panel">
+              <!-- Quick Strategy Filter / Jump Bar (Exact 1 -> 2 -> 3 Order) -->
+              <div class="sub-tabs-container">
+                <button class="sub-tab-btn active" data-subtab="market-diagnose">1. SWOT 분석</button>
+                <button class="sub-tab-btn" data-subtab="market-size">2. BCG 매트릭스(Growth-Share Matrix)</button>
+                <button class="sub-tab-btn" data-subtab="market-bm">3. 지각 매핑(Perceptual Mapping)</button>
+                <button class="sub-tab-btn sub-tab-all-btn" data-subtab="market-all">전체 한눈에 보기</button>
+              </div>
+
+              <!-- Sub Tab Viewport (All 3 shown in 1 -> 2 -> 3 order by default so the exact sequence is immediately visible) -->
+              <div class="sub-tab-viewport">
+                <!-- =========================================================
+                     1. SWOT 분석
+                     ========================================================= -->
+                <div id="subtab-content-market-diagnose" class="sub-tab-pane active">
+                  <div class="strategy-framework-banner swot-banner">
+                    <div class="strategy-banner-head">
+                      <span class="strategy-step-badge">STRATEGY 01 · SWOT ANALYSIS</span>
+                      <h4>1. SWOT 분석</h4>
+                    </div>
+                    <div class="strategy-purpose-grid">
+                      <div class="purpose-box">
+                        <span class="purpose-label">📖 전략 설명 (개념)</span>
+                        <p>자사 브랜드의 내부 역량인 <strong>강점(Strengths)·약점(Weaknesses)</strong>과 경쟁사 및 시장의 외부 환경인 <strong>기회(Opportunities)·위협(Threats)</strong>을 4사분면 매트릭스로 구조화하여 진단하는 전략 분석 기법입니다.</p>
+                      </div>
+                      <div class="purpose-box">
+                        <span class="purpose-label">🎯 전략 용도 (활용 목적)</span>
+                        <p><strong>자사 브랜드의 현재 경쟁력 진단 및 경쟁 대응 방향 설정용:</strong> 자사의 강점(S)으로 시장 기회(O)를 선점하고, 내부 약점(W)을 보완하여 경쟁사의 위협(T)을 방어하는 실전 실행 전략(SO·ST·WO·WT)을 도출할 때 사용합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-section">
+                    <div class="swot-visual-container">
+                      <!-- Column Headers -->
+                      <div class="swot-axis-top-row">
+                        <div class="swot-axis-corner">구분 축</div>
+                        <div class="swot-col-head helpful">
+                          <span class="col-dot"></span>
+                          <strong>긍정적 요인 (Helpful · 목표 달성 촉진)</strong>
+                        </div>
+                        <div class="swot-col-head harmful">
+                          <span class="col-dot"></span>
+                          <strong>부정적 요인 (Harmful · 보완 및 방어 대상)</strong>
+                        </div>
+                      </div>
+
+                      <div class="swot-diagram-body">
+                        <!-- Row 1: Internal (자사 브랜드 내부 역량) -->
+                        <div class="swot-matrix-row">
+                          <div class="swot-row-label internal">
+                            <span class="row-badge">INTERNAL</span>
+                            <strong>자사 브랜드<br>내부 역량</strong>
+                            <small>통제·강화 가능</small>
+                          </div>
+                          <div class="swot-card swot-strength">
+                            <div class="swot-header">
+                              <span class="swot-icon">S</span>
+                              <div>
+                                <h5>Strengths (강점)</h5>
+                                <span class="swot-sub-tag">경쟁사 대비 자사만의 핵심 우위</span>
+                              </div>
+                            </div>
+                            <ul id="swot-strengths-list"></ul>
+                          </div>
+                          <div class="swot-card swot-weakness">
+                            <div class="swot-header">
+                              <span class="swot-icon">W</span>
+                              <div>
+                                <h5>Weaknesses (약점)</h5>
+                                <span class="swot-sub-tag">자사 내부에서 보완해야 할 한계</span>
+                              </div>
+                            </div>
+                            <ul id="swot-weaknesses-list"></ul>
+                          </div>
+                        </div>
+
+                        <!-- Row 2: External (시장 · 경쟁사 외부 환경) -->
+                        <div class="swot-matrix-row">
+                          <div class="swot-row-label external">
+                            <span class="row-badge">EXTERNAL</span>
+                            <strong>시장 · 경쟁사<br>외부 환경</strong>
+                            <small>트렌드·상권 변화</small>
+                          </div>
+                          <div class="swot-card swot-opportunity">
+                            <div class="swot-header">
+                              <span class="swot-icon">O</span>
+                              <div>
+                                <h5>Opportunities (기회)</h5>
+                                <span class="swot-sub-tag">자사에 유리한 시장·트렌드 기회</span>
+                              </div>
+                            </div>
+                            <ul id="swot-opportunities-list"></ul>
+                          </div>
+                          <div class="swot-card swot-threat">
+                            <div class="swot-header">
+                              <span class="swot-icon">T</span>
+                              <div>
+                                <h5>Threats (위협)</h5>
+                                <span class="swot-sub-tag">경쟁사 공세 및 외부 환경 리스크</span>
+                              </div>
+                            </div>
+                            <ul id="swot-threats-list"></ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Cross-SWOT Action Matrix -->
+                    <div class="cross-swot-section">
+                      <h5 class="cross-swot-title">⚡ SWOT 교차 실행 전략 (내부 역량 × 외부 환경 결합 액션 플랜)</h5>
+                      <div id="swot-cross-grid" class="cross-swot-grid"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     2. BCG 매트릭스(Growth-Share Matrix)
+                     ========================================================= -->
+                <div id="subtab-content-market-size" class="sub-tab-pane active">
+                  <div class="strategy-framework-banner bcg-banner">
+                    <div class="strategy-banner-head">
+                      <span class="strategy-step-badge">STRATEGY 02 · GROWTH-SHARE MATRIX</span>
+                      <h4>2. BCG 매트릭스(Growth-Share Matrix)</h4>
+                    </div>
+                    <div class="strategy-purpose-grid">
+                      <div class="purpose-box">
+                        <span class="purpose-label">📖 전략 설명 (개념)</span>
+                        <p>보스턴 컨설팅 그룹(BCG)이 개발한 포트폴리오 분석 모델로, 세로축(Y축)에 <strong>'시장 성장률(Market Growth Rate)'</strong>, 가로축(X축)에 <strong>'상대적 시장 점유율(Relative Market Share)'</strong>을 두고 자사의 상품·서비스를 <strong>⭐ Star · ❓ Question Mark · 🐄 Cash Cow · 🐕 Dog</strong> 4개 사분면으로 분류합니다.</p>
+                      </div>
+                      <div class="purpose-box">
+                        <span class="purpose-label">🎯 전략 용도 (활용 목적)</span>
+                        <p><strong>자사 상품·서비스 포트폴리오 진단 및 예산·자원 배분 결정용:</strong> 어떤 주력 상품에 마케팅 예산을 집중 투자(<strong>Star</strong>)하고, 어떤 효자 상품에서 안정적 현금을 창출(<strong>Cash Cow</strong>)하며, 어떤 신규 상품을 육성(<strong>Question Mark</strong>)하고 비효율 품목을 축소(<strong>Dog</strong>)할지 결정할 때 사용합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-section">
+                    <div class="bcg-visual-board">
+                      <!-- Y-Axis Label -->
+                      <div class="bcg-y-axis">
+                        <span class="bcg-axis-pole high">▲ HIGH<br><small>고성장</small></span>
+                        <div class="bcg-axis-line-v">
+                          <span class="bcg-axis-title-v">시장 성장률 (Market Growth Rate)</span>
+                        </div>
+                        <span class="bcg-axis-pole low">▼ LOW<br><small>저성장</small></span>
+                      </div>
+
+                      <!-- Main 2x2 BCG Grid + X-Axis -->
+                      <div class="bcg-main-area">
+                        <div class="bcg-quadrants-grid">
+                          <!-- Quadrant 1: STAR (High Growth, High Share) -->
+                          <div class="bcg-quad-card bcg-star">
+                            <div class="bcg-quad-header">
+                              <div class="bcg-quad-icon-wrap">⭐</div>
+                              <div class="bcg-quad-meta">
+                                <span class="bcg-quad-eng">STAR · 고성장 × 고점유</span>
+                                <h5>스타 (핵심 성장 주력군)</h5>
+                              </div>
+                              <span class="bcg-action-pill pill-star">용도: 집중 투자·확대</span>
+                            </div>
+                            <div class="bcg-quad-body">
+                              <div id="bcg-star-title" class="bcg-item-title"></div>
+                              <div class="bcg-metrics-bars">
+                                <div class="bcg-bar-row">
+                                  <span>시장 성장률</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-high" style="width: 92%;"></div></div>
+                                  <strong>HIGH</strong>
+                                </div>
+                                <div class="bcg-bar-row">
+                                  <span>상대적 점유율</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-high" style="width: 88%;"></div></div>
+                                  <strong>HIGH</strong>
+                                </div>
+                              </div>
+                              <p id="bcg-star-desc" class="bcg-item-desc"></p>
+                            </div>
+                          </div>
+
+                          <!-- Quadrant 2: QUESTION MARK (High Growth, Low Share) -->
+                          <div class="bcg-quad-card bcg-question">
+                            <div class="bcg-quad-header">
+                              <div class="bcg-quad-icon-wrap">❓</div>
+                              <div class="bcg-quad-meta">
+                                <span class="bcg-quad-eng">QUESTION MARK · 고성장 × 저점유</span>
+                                <h5>물음표 (신규 육성 후보군)</h5>
+                              </div>
+                              <span class="bcg-action-pill pill-question">용도: 반응 검증·Star 육성</span>
+                            </div>
+                            <div class="bcg-quad-body">
+                              <div id="bcg-question-title" class="bcg-item-title"></div>
+                              <div class="bcg-metrics-bars">
+                                <div class="bcg-bar-row">
+                                  <span>시장 성장률</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-high" style="width: 86%;"></div></div>
+                                  <strong>HIGH</strong>
+                                </div>
+                                <div class="bcg-bar-row">
+                                  <span>상대적 점유율</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-mid" style="width: 34%;"></div></div>
+                                  <strong>LOW</strong>
+                                </div>
+                              </div>
+                              <p id="bcg-question-desc" class="bcg-item-desc"></p>
+                            </div>
+                          </div>
+
+                          <!-- Quadrant 3: CASH COW (Low/Stable Growth, High Share) -->
+                          <div class="bcg-quad-card bcg-cashcow">
+                            <div class="bcg-quad-header">
+                              <div class="bcg-quad-icon-wrap">🐄</div>
+                              <div class="bcg-quad-meta">
+                                <span class="bcg-quad-eng">CASH COW · 안정시장 × 고점유</span>
+                                <h5>캐시카우 (핵심 현금 창출군)</h5>
+                              </div>
+                              <span class="bcg-action-pill pill-cashcow">용도: 수익 창출·자금원</span>
+                            </div>
+                            <div class="bcg-quad-body">
+                              <div id="bcg-cashcow-title" class="bcg-item-title"></div>
+                              <div class="bcg-metrics-bars">
+                                <div class="bcg-bar-row">
+                                  <span>시장 성장률</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-mid" style="width: 42%;"></div></div>
+                                  <strong>LOW</strong>
+                                </div>
+                                <div class="bcg-bar-row">
+                                  <span>상대적 점유율</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-high" style="width: 94%;"></div></div>
+                                  <strong>HIGH</strong>
+                                </div>
+                              </div>
+                              <p id="bcg-cashcow-desc" class="bcg-item-desc"></p>
+                            </div>
+                          </div>
+
+                          <!-- Quadrant 4: DOG (Low Growth, Low Share) -->
+                          <div class="bcg-quad-card bcg-dog">
+                            <div class="bcg-quad-header">
+                              <div class="bcg-quad-icon-wrap">🐕</div>
+                              <div class="bcg-quad-meta">
+                                <span class="bcg-quad-eng">DOG · 저성장 × 저점유</span>
+                                <h5>도그 (비효율 구조조정군)</h5>
+                              </div>
+                              <span class="bcg-action-pill pill-dog">용도: 축소·리패키징</span>
+                            </div>
+                            <div class="bcg-quad-body">
+                              <div id="bcg-dog-title" class="bcg-item-title"></div>
+                              <div class="bcg-metrics-bars">
+                                <div class="bcg-bar-row">
+                                  <span>시장 성장률</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-low" style="width: 22%;"></div></div>
+                                  <strong>LOW</strong>
+                                </div>
+                                <div class="bcg-bar-row">
+                                  <span>상대적 점유율</span>
+                                  <div class="bcg-bar-track"><div class="bcg-bar-fill fill-low" style="width: 18%;"></div></div>
+                                  <strong>LOW</strong>
+                                </div>
+                              </div>
+                              <p id="bcg-dog-desc" class="bcg-item-desc"></p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- X-Axis Label -->
+                        <div class="bcg-x-axis">
+                          <span class="bcg-axis-pole high">◀ HIGH (고점유 · 높은 수익성)</span>
+                          <span class="bcg-axis-title-h">상대적 시장 점유율 (Relative Market Share)</span>
+                          <span class="bcg-axis-pole low">LOW (저점유 · 낮은 수익성) ▶</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- BCG Cash Flow & Growth Trajectory Summary -->
+                    <div class="bcg-flow-banner">
+                      <div class="bcg-flow-item">
+                        <span class="bcg-flow-tag">💰 BCG 자금 순환 경로 (Cash Flow)</span>
+                        <p><strong>🐄 Cash Cow(단골 스테디셀러)</strong>에서 창출된 잉여 현금 수익을 ➔ <strong>⭐ Star(대표 주력 상품)</strong>와 <strong>❓ Question Mark(신규 유망 상품)</strong>의 마케팅 비용으로 재투자합니다.</p>
+                      </div>
+                      <div class="bcg-flow-item">
+                        <span class="bcg-flow-tag">🚀 BCG 포트폴리오 성장 경로 (Growth Path)</span>
+                        <p><strong>❓ Question Mark</strong>(신규 상품 시장 검증) ➔ <strong>⭐ Star</strong>(시장 점유율 1위 시그니처 등극) ➔ <strong>🐄 Cash Cow</strong>(고정 단골이 반복 구매하는 안정적 수익원화)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- =========================================================
+                     3. 지각 매핑(Perceptual Mapping)
+                     ========================================================= -->
+                <div id="subtab-content-market-bm" class="sub-tab-pane active">
+                  <div class="strategy-framework-banner perceptual-banner">
+                    <div class="strategy-banner-head">
+                      <span class="strategy-step-badge">STRATEGY 03 · PERCEPTUAL MAPPING</span>
+                      <h4>3. 지각 매핑(Perceptual Mapping · 위치 매핑)</h4>
+                    </div>
+                    <div class="strategy-purpose-grid">
+                      <div class="purpose-box">
+                        <span class="purpose-label">📖 전략 설명 (개념)</span>
+                        <p>타깃 고객이 브랜드를 선택할 때 중요하게 생각하는 2가지 핵심 평가 기준(가로축: 품질·전문성 / 세로축: 가격·브랜드 가치)으로 십자(┼) 좌표 평면을 구성하여, <strong>소비자의 머릿속(지각 공간)에 경쟁사들과 자사 브랜드가 각각 어디에 위치하는지</strong>를 원형 버블로 시각화한 포지셔닝 지각도입니다.</p>
+                      </div>
+                      <div class="purpose-box">
+                        <span class="purpose-label">🎯 전략 용도 (활용 목적)</span>
+                        <p><strong>경쟁사 대비 자사 브랜드의 차별화 포지셔닝 및 블루오션(빈틈 시장) 발굴용:</strong> 경쟁사들이 몰려 있는 출혈 경쟁 구역을 눈으로 확인하고, 고객에게 독보적인 가치로 인식될 <strong>자사 브랜드만의 목표 위치(우상단 High Quality · High Value 영역)</strong>를 설정할 때 사용합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card-section">
+                    <div class="perceptual-map-header-row">
+                      <div>
+                        <h4 class="section-title">경쟁사 vs 자사 브랜드 지각 매핑 (Perceptual Mapping Diagram)</h4>
+                        <p class="section-desc" style="margin-bottom: 0;">가로축(품질·전문성)과 세로축(가격·브랜드 가치) 기준 위에서 경쟁사 대비 <strong>자사 브랜드(하늘색 원)</strong>의 차별화된 지각 위치를 직관적으로 보여줍니다.</p>
+                      </div>
+                      <div class="perceptual-legend">
+                        <span class="legend-item"><i class="legend-dot our-sky"></i> 자사 브랜드 (목표 포지션)</span>
+                        <span class="legend-item"><i class="legend-dot comp-pink"></i> 경쟁군 B (저가·일반형)</span>
+                        <span class="legend-item"><i class="legend-dot comp-peach"></i> 경쟁군 C (실속·특화형)</span>
+                      </div>
+                    </div>
+
+                    <!-- Classic Bold Cross-Axis Perceptual Mapping Stage (Matches User Reference Image) -->
+                    <div class="pm-classic-wrapper">
+                      <!-- Top Pole Label (Higher Price / High Value) -->
+                      <div class="pm-pole pm-pole-top">
+                        <strong class="pm-pole-en">Higher Price · High Value</strong>
+                        <span class="axis-lbl-y-top">프리미엄 가치 · 적극적 브랜딩</span>
+                      </div>
+
+                      <!-- Middle Row: Left Pole + Cross-Axis Canvas + Right Pole -->
+                      <div class="pm-middle-row">
+                        <div class="pm-pole pm-pole-left">
+                          <strong class="pm-pole-en">Lower Quality</strong>
+                          <span class="axis-lbl-x-left">대중적 · 범용 구성</span>
+                        </div>
+
+                        <div class="pm-cross-canvas" id="market-matrix-grid">
+                          <!-- Bold Black Cross-Axes with Solid Arrowheads (SVG) -->
+                          <svg class="pm-axes-svg" viewBox="0 0 500 420" preserveAspectRatio="none" aria-hidden="true">
+                            <!-- Vertical Axis Line -->
+                            <line x1="250" y1="18" x2="250" y2="402" stroke="#0a0a0a" stroke-width="8" />
+                            <!-- Top Arrowhead -->
+                            <polygon points="250,2 237,22 263,22" fill="#0a0a0a" />
+                            <!-- Bottom Arrowhead -->
+                            <polygon points="250,418 237,398 263,398" fill="#0a0a0a" />
+
+                            <!-- Horizontal Axis Line -->
+                            <line x1="18" y1="210" x2="482" y2="210" stroke="#0a0a0a" stroke-width="8" />
+                            <!-- Left Arrowhead -->
+                            <polygon points="2,210 22,197 22,223" fill="#0a0a0a" />
+                            <!-- Right Arrowhead -->
+                            <polygon points="498,210 478,197 478,223" fill="#0a0a0a" />
+                          </svg>
+
+                          <!-- Dynamic Brand Circle Bubbles Container -->
+                          <div id="matrix-dots-container">
+                            <!-- Generated dynamically in app.js -->
+                          </div>
+                        </div>
+
+                        <div class="pm-pole pm-pole-right">
+                          <strong class="pm-pole-en">Higher Quality</strong>
+                          <span class="axis-lbl-x-right">차별화된 시그니처 · 전문성</span>
+                        </div>
+                      </div>
+
+                      <!-- Bottom Pole Label (Lower Price / Budget) -->
+                      <div class="pm-pole pm-pole-bottom">
+                        <strong class="pm-pole-en">Lower Price · Basic</strong>
+                        <span class="axis-lbl-y-bottom">저가 경쟁 · 오프라인 단순 영업</span>
+                      </div>
+                    </div>
+
+                    <!-- Competitor vs Our Brand Positioning Summary Table -->
+                    <div class="perceptual-summary-box">
+                      <h5 class="cross-swot-title">📌 지각 매핑(Perceptual Mapping) 기반 경쟁사 대비 자사 차별화 지표</h5>
+                      <div class="table-responsive">
+                        <table class="feature-comparison-table">
+                          <thead>
+                            <tr id="feature-table-header">
+                              <th>핵심 포지셔닝 평가 축</th>
+                              <th>자사 브랜드</th>
+                            </tr>
+                          </thead>
+                          <tbody id="feature-table-body"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Channel Content Strategy & Generative AI Hub -->
+            <div id="tab-content-ia" class="tab-pane glass-panel">
+              <!-- Generative AI Strategic Guide & Direct Launch Logo Buttons -->
+              <div class="genai-strategy-hub">
+                <div class="genai-hub-header">
+                  <div class="genai-hub-title-wrap">
+                    <span class="genai-hub-badge">AI CREATIVE WORKFLOW</span>
+                    <h4>생성형 AI 종류별 전략적 활용 가이드 & 바로가기</h4>
+                  </div>
+                  <p class="genai-hub-desc">
+                    단일 고정 원고만으로는 매일 달라지는 알고리즘과 다양한 타깃의 니즈를 모두 충족하기 어렵습니다. 아래 <strong>채널별 맞춤 AI 마스터 프롬프트</strong>를 복사한 뒤, 목적에 맞는 <strong>생성형 AI 로고 버튼</strong>을 눌러 수십 가지 버전의 원고·대본·썸네일로 무한 확장하세요!
+                  </p>
+                </div>
+
+                <!-- Strategic Role Summary by Generative AI Type (Official BI Logos) -->
+                <div class="genai-role-grid">
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-openai" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
+                        </svg>
+                      </span>
+                      <strong>ChatGPT (OpenAI)</strong>
+                    </div>
+                    <span>유튜브 롱폼·쇼츠 대본 구조화, 3초 후킹 제목 10선, 프로모션 기획안 무한 변주</span>
+                  </div>
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-claude" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M11.3 2.2c.4-.3 1-.3 1.4 0 .2.2.3.5.3.8l.4 5.7 4.2-3.9c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-3.9 4.2 5.7.4c.5 0 .9.5.9 1s-.4 1-.9 1l-5.7.4 3.9 4.2c.4.4.4 1 0 1.4-.4.4-1 .4-1.4 0l-4.2-3.9-.4 5.7c0 .5-.5.9-1 .9s-1-.4-1-.9l-.4-5.7-4.2 3.9c-.4.4-1 .4-1.4 0-.4-.4-.4-1 0-1.4l3.9-4.2-5.7-.4c-.5 0-.9-.5-.9-1s.4-1 .9-1l5.7-.4-3.9-4.2c-.4-.4-.4-1 0-1.4.4-.4 1-.4 1.4 0l4.2 3.9.4-5.7c0-.3.1-.6.3-.8z"/>
+                        </svg>
+                      </span>
+                      <strong>Claude (Anthropic)</strong>
+                    </div>
+                    <span>기계적인 어투 없는 자연스러운 한국어 블로그(AEO·GEO) 장문 칼럼, 브랜드 스토리 원고</span>
+                  </div>
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-gemini" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M12 1.8C12.7 7.6 16.4 11.3 22.2 12C16.4 12.7 12.7 16.4 12 22.2C11.3 16.4 7.6 12.7 1.8 12C7.6 11.3 11.3 7.6 12 1.8Z"/>
+                        </svg>
+                      </span>
+                      <strong>Google Gemini</strong>
+                    </div>
+                    <span>유튜브·구글 최신 검색 트렌드 결합, 지역 상권 정보 반영 다각도 콘텐츠 기획</span>
+                  </div>
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-perplexity" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07 19.07 4.93"/>
+                          <rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/>
+                        </svg>
+                      </span>
+                      <strong>Perplexity</strong>
+                    </div>
+                    <span>업종별 최신 통계·논문·팩트 리서치 및 AI 검색(GEO) 출처 인용 최적화</span>
+                  </div>
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-wrtn" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M3.2 5.5h3.5l2.6 8.6 2.7-8.6h2.8l2.7 8.6 2.6-8.6h3.5l-4.5 13h-3.1L13.4 10l-2.6 8.5H7.7l-4.5-13z"/>
+                        </svg>
+                      </span>
+                      <strong>뤼튼 (Wrtn)</strong>
+                    </div>
+                    <span>네이버 스마트플레이스 소개글, 블로그, 당근마켓 등 한국형 로컬 문구 최적화</span>
+                  </div>
+                  <div class="genai-role-card">
+                    <div class="genai-role-head">
+                      <span class="bi-badge bi-vrew-miri" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H11l-4 4v-4H6.5A2.5 2.5 0 0 1 4 14.5v-9zm6.2 2.2v6.6l5.6-3.3-5.6-3.3z"/>
+                        </svg>
+                      </span>
+                      <strong>Vrew · 미리캔버스</strong>
+                    </div>
+                    <span>AI 대본 기반 유튜브 쇼츠 자동 자막·음성 편집 및 클릭률 높은 썸네일·카드뉴스 제작</span>
+                  </div>
+                </div>
+
+                <!-- Direct Launch AI Logo Buttons (Official BI Logos) -->
+                <div class="genai-logo-bar">
+                  <span class="genai-logo-bar-label">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: -2px; margin-right: 4px;">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    프롬프트 복사 후 AI 바로 접속:
+                  </span>
+                  <div class="ai-logo-buttons-grid">
+                    <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-chatgpt" title="ChatGPT (OpenAI) 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">ChatGPT</span>
+                      <span class="ai-logo-tag">기획·대본</span>
+                    </a>
+
+                    <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-claude" title="Claude (Anthropic) 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M11.3 2.2c.4-.3 1-.3 1.4 0 .2.2.3.5.3.8l.4 5.7 4.2-3.9c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-3.9 4.2 5.7.4c.5 0 .9.5.9 1s-.4 1-.9 1l-5.7.4 3.9 4.2c.4.4.4 1 0 1.4-.4.4-1 .4-1.4 0l-4.2-3.9-.4 5.7c0 .5-.5.9-1 .9s-1-.4-1-.9l-.4-5.7-4.2 3.9c-.4.4-1 .4-1.4 0-.4-.4-.4-1 0-1.4l3.9-4.2-5.7-.4c-.5 0-.9-.5-.9-1s.4-1 .9-1l5.7-.4-3.9-4.2c-.4-.4-.4-1 0-1.4.4-.4 1-.4 1.4 0l4.2 3.9.4-5.7c0-.3.1-.6.3-.8z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">Claude</span>
+                      <span class="ai-logo-tag">블로그·칼럼</span>
+                    </a>
+
+                    <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-gemini" title="Google Gemini 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M12 1.8C12.7 7.6 16.4 11.3 22.2 12C16.4 12.7 12.7 16.4 12 22.2C11.3 16.4 7.6 12.7 1.8 12C7.6 11.3 11.3 7.6 12 1.8Z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">Gemini</span>
+                      <span class="ai-logo-tag">유튜브·트렌드</span>
+                    </a>
+
+                    <a href="https://www.perplexity.ai/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-perplexity" title="Perplexity 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07 19.07 4.93"/>
+                          <rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">Perplexity</span>
+                      <span class="ai-logo-tag">팩트·리서치</span>
+                    </a>
+
+                    <a href="https://wrtn.ai/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-wrtn" title="뤼튼(Wrtn) 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M3.2 5.5h3.5l2.6 8.6 2.7-8.6h2.8l2.7 8.6 2.6-8.6h3.5l-4.5 13h-3.1L13.4 10l-2.6 8.5H7.7l-4.5-13z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">뤼튼 Wrtn</span>
+                      <span class="ai-logo-tag">한국형SNS</span>
+                    </a>
+
+                    <a href="https://vrew.voyagerx.com/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-vrew" title="Vrew AI 영상 편집기 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H11l-4 4v-4H6.5A2.5 2.5 0 0 1 4 14.5v-9zm6.2 2.2v6.6l5.6-3.3-5.6-3.3z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">Vrew</span>
+                      <span class="ai-logo-tag">AI쇼츠편집</span>
+                    </a>
+
+                    <a href="https://www.miricanvas.com/" target="_blank" rel="noopener noreferrer" class="ai-logo-btn ai-btn-miri" title="미리캔버스 새 창으로 열기">
+                      <span class="ai-logo-icon">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                          <path d="M4 18V6h3.4l4.6 7.2L16.6 6H20v12h-3.2v-6.8L12.6 17h-1.2L7.2 11.2V18H4z"/>
+                        </svg>
+                      </span>
+                      <span class="ai-logo-name">미리캔버스</span>
+                      <span class="ai-logo-tag">썸네일·배너</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ia-layout">
+                <!-- Left: Channel Navigation -->
+                <div class="ia-sidebar">
+                  <h4 class="section-title">홍보 채널 마케팅 맵</h4>
+                  <div id="ia-page-list" class="ia-page-navigation">
+                    <!-- Channel items will be generated here -->
+                  </div>
+                </div>
+                <!-- Right: Selected Channel Strategy, AI Master Prompt & Guide -->
+                <div class="ia-content">
+                  <div class="selected-page-header" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <h4 id="selected-page-title" class="section-title">채널 명</h4>
+                      <span id="selected-page-slug" class="url-slug-badge">AI 프롬프트 & 전략</span>
+                    </div>
+                    <button type="button" id="btn-copy-channel-content" class="btn-secondary" style="padding: 5px 10px; font-size: 11px;">
+                      📋 이 채널 전략·프롬프트 전체 복사
+                    </button>
+                  </div>
+                  <p class="section-desc">각 항목 우측의 <strong>[📋 복사]</strong> 버튼을 눌러 AI 마스터 프롬프트를 복사한 뒤, 상단의 <strong>생성형 AI 로고 버튼(ChatGPT·Claude·Gemini 등)</strong>을 클릭해 우리 비즈니스만의 다채로운 원고를 무제한 생성하세요.</p>
+                  
+                  <div id="selected-page-sections" class="page-sections-flow">
+                    <!-- Sections will be generated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 4: Brand Story Builder & Examples (formerly 4-Week Plan) -->
+            <div id="tab-content-db" class="tab-pane glass-panel">
+              <div class="brand-story-hero-banner">
+                <div class="brand-story-hero-top">
+                  <span class="genai-hub-badge">BRAND STORYTELLING</span>
+                  <h4>왜 지금 우리 비즈니스만의 '브랜드 스토리'를 반드시 만들어야 할까요?</h4>
+                </div>
+                <p>
+                  대부분의 비즈니스가 메뉴·상품 스펙이나 가격만 나열할 뿐, 고객의 마음을 움직이는 <strong>'브랜드 스토리'</strong>가 비어 있습니다.
+                  경쟁이 치열해질수록 소비자는 단순히 '무엇을 파는가(What)'가 아니라 <strong>'왜 이 일을 시작했는가(Why)'와 '어떤 철학·원칙을 지키는가'</strong>에 공감할 때 평생 단골이자 팬이 됩니다.
+                  아직 브랜드 스토리가 없다면, 아래 제안해 드리는 <strong>우리 비즈니스 맞춤 브랜드 스토리 예시</strong>를 바탕으로 오늘 꼭 대표님만의 브랜드 서사를 완성해 보세요!
+                </p>
+              </div>
+
+              <div class="db-layout">
+                <!-- Left: Brand Story Theme List -->
+                <div class="db-sidebar">
+                  <h4 class="section-title">브랜드 스토리 테마</h4>
+                  <div id="db-collection-list" class="db-table-navigation">
+                    <!-- Brand story theme buttons will be generated here -->
+                  </div>
+                </div>
+                <!-- Right: Selected Brand Story Examples & Guide -->
+                <div class="db-content">
+                  <div class="selected-table-header" style="flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <h4 id="selected-table-title" class="section-title">브랜드 스토리 테마</h4>
+                      <span class="db-engine-badge">Brand Story Guide</span>
+                    </div>
+                    <button type="button" id="btn-copy-brand-story" class="btn-secondary" style="padding: 5px 10px; font-size: 11px;">
+                      📋 이 테마 스토리 전체 복사
+                    </button>
+                  </div>
+                  
+                  <div class="table-responsive">
+                    <table class="db-fields-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 24%;">스토리 구성 요소</th>
+                          <th style="width: 16%;">활용 채널 · 역할</th>
+                          <th>우리 비즈니스 맞춤 브랜드 스토리 예시 & 작성 가이드 (행 클릭 시 복사)</th>
+                        </tr>
+                      </thead>
+                      <tbody id="selected-table-fields">
+                        <!-- Story rows generated here -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer (Properly inside .app-container) -->
+    <footer class="app-footer-info">
+      <div class="footer-content">
+        <div class="footer-left">
+          <strong>MarketingMap Studio</strong> by Audrey © 2026. All rights reserved.
+        </div>
+        <div class="footer-links">
+          <a href="#privacy" onclick="window.openTermsModal('privacy'); return false;">개인정보처리방침</a>
+          <a href="#terms" onclick="window.openTermsModal('service'); return false;">서비스 이용약관</a>
+          <a href="#support" onclick="document.getElementById('support-overlay').classList.add('active'); return false;">고객센터</a>
+        </div>
+        <div class="footer-right">
+          <span>Powered by Audrey AI · Gemini & OpenAI Engine</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Settings Modal (API Key Configuration) -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel animate-zoom-in">
+      <div class="modal-header">
+        <h3>AI 마케팅 엔진 설정</h3>
+        <button id="btn-close-modal" class="btn-icon-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">MarketingMap은 별도 설정 없이 즉시 사용 가능한 <strong>오드리 로컬 마케팅 엔진</strong>을 기본 탑재하고 있으며, 원하실 경우 Google Gemini 또는 OpenAI API 키를 연동하여 한층 고도화된 실시간 맞춤 분석을 이용하실 수 있습니다.</p>
+        
+        <div class="input-group">
+          <label for="settings-provider">AI 엔진 선택</label>
+          <select id="settings-provider">
+            <option value="local">오드리 로컬 마케팅 엔진 (API 키 불필요 · 즉시 실행)</option>
+            <option value="gemini">Google Gemini AI Engine (무료 API 티어 지원)</option>
+            <option value="openai">OpenAI GPT-4o AI Engine</option>
+          </select>
+        </div>
+
+        <!-- Google Gemini Section -->
+        <div id="settings-gemini-section" class="provider-section hidden">
+          <div class="input-group">
+            <label for="settings-gemini-key">Gemini API Key</label>
+            <input type="password" id="settings-gemini-key" placeholder="AIzaSy...">
+            <div class="input-helper">
+              Google AI Studio에서 무료 API Key를 발급받아 입력해 주세요.
+              <a href="https://aistudio.google.com/" target="_blank" class="modal-link">Google AI Studio 바로가기</a>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="settings-gemini-model">Gemini 모델</label>
+            <select id="settings-gemini-model">
+              <option value="gemini-1.5-flash">gemini-1.5-flash (권장: 빠른 마케팅 전략 생성)</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro (정밀 상권·카피 추론 모델)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- OpenAI Section -->
+        <div id="settings-openai-section" class="provider-section hidden">
+          <div class="input-group">
+            <label for="settings-openai-key">OpenAI API Key</label>
+            <input type="password" id="settings-openai-key" placeholder="sk-proj-...">
+            <div class="input-helper">
+              OpenAI 플랫폼에서 발급받은 API Key를 입력해 주세요.
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="modal-link">OpenAI Console 바로가기</a>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="settings-openai-model">OpenAI 모델</label>
+            <select id="settings-openai-model">
+              <option value="gpt-4o">gpt-4o (권장: 자연스러운 한국어 홍보 원고)</option>
+              <option value="gpt-4o-mini">gpt-4o-mini (빠른 속도 · 가성비 최적화)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn-primary">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- High-Tech Analysis HUD Loading Overlay -->
+  <div id="hud-loading" class="hud-overlay hidden">
+    <div class="hud-container">
+      <div class="hud-clock-container">
+        <svg class="hud-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.3"></circle>
+          <line class="hud-hour-hand" x1="12" y1="12" x2="12" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+          <line class="hud-minute-hand" x1="12" y1="12" x2="12" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></line>
+          <circle cx="12" cy="12" r="0.8" fill="currentColor"></circle>
+        </svg>
+      </div>
+      
+      <div class="hud-status-box">
+        <div class="hud-header">
+          <span class="hud-title">AUDREY MARKETING ENGINE ACTIVE</span>
+          <span id="hud-pct" class="hud-percentage">0%</span>
+        </div>
+        <div class="hud-progress-bar">
+          <div id="hud-progress-fill" class="hud-progress-fill"></div>
+        </div>
+        <div class="hud-console">
+          <div id="hud-line-1" class="hud-console-line active">우리 비즈니스 업종 및 지역 상권 데이터 분석 중...</div>
+          <div id="hud-line-2" class="hud-console-line">네이버 플레이스·블로그·SNS 황금 키워드 추출 중...</div>
+          <div id="hud-line-3" class="hud-console-line">AI 검색(GEO) 추천 Q&A 및 경쟁 비즈니스 차별점 도출 중...</div>
+          <div id="hud-line-4" class="hud-console-line">블로그·유튜브·인스타·당근마켓 홍보 채널 마케팅 맵 작성 중...</div>
+          <div id="hud-line-5" class="hud-console-line">고객의 마음을 움직이는 우리 비즈니스 맞춤 브랜드 스토리 완성 중...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glassmorphic Unified Auth Modal (로그인 & 회원가입 + 약관 전문 포함) -->
+  <div id="login-modal" class="login-modal-overlay">
+    <div class="login-modal-card glass-panel auth-card">
+      <div class="login-modal-header">
+        <div class="auth-tabs">
+          <button id="tab-login" class="auth-tab-btn active" type="button">로그인</button>
+          <button id="tab-register" class="auth-tab-btn" type="button">회원가입</button>
+        </div>
+        <button id="btn-close-login" class="btn-close-modal" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="login-modal-body">
+        <div id="login-notice-message" class="login-notice-message" style="display: none;"></div>
+        <div id="auth-feedback-banner" class="auth-feedback-banner" style="display: none;"></div>
+        
+        <!-- Social Login & Signup Options (Kakao, Naver, Google) -->
+        <div class="social-login-group">
+          <button type="button" id="btn-kakao-login" class="btn-social-login btn-kakao">
+            <svg viewBox="0 0 24 24" style="width: 17px; height: 17px;">
+              <path fill="#191919" d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.75-.15.54-.96 3.47-1 3.63-.05.22.08.22.17.16.07-.05 2.79-1.89 3.92-2.66.72.1 1.46.12 2.23.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+            </svg>
+            <span>카카오톡으로 3초 만에 시작하기</span>
+          </button>
+
+          <button type="button" id="btn-naver-login" class="btn-social-login btn-naver">
+            <svg viewBox="0 0 24 24" style="width: 15px; height: 15px;">
+              <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"/>
+            </svg>
+            <span>네이버 아이디로 시작하기</span>
+          </button>
+
+          <button type="button" id="btn-google-login" class="btn-social-login btn-google-login">
+            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+              <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.64l3.15-3.15C17.45 1.76 14.94 1 12 1 7.35 1 3.4 3.65 1.48 7.5l3.85 3C6.3 7.8 8.93 5.04 12 5.04z"/>
+              <path fill="#4285F4" d="M23.45 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.43c-.28 1.44-1.1 2.66-2.33 3.48l3.61 2.8c2.1-1.93 3.74-4.78 3.74-8.43z"/>
+              <path fill="#FBBC05" d="M5.33 14.5A7.16 7.16 0 0 1 4.96 12c0-.87.13-1.7.37-2.5L1.48 6.5A11.96 11.96 0 0 0 0 12c0 2 0 4 .5 5.5l4.83-3z"/>
+              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1 .67-2.28 1.07-4.36 1.07-3.07 0-5.7-2.76-6.67-5.46l-3.85 3C3.4 20.35 7.35 23 12 23z"/>
+            </svg>
+            <span>Google 계정으로 시작하기</span>
+          </button>
+        </div>
+        
+        <div class="auth-divider">
+          <span>또는 이메일 계정으로 진행</span>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="login-modal-form" class="auth-form active-form">
+          <div class="input-group">
+            <label for="login-email">이메일 주소</label>
+            <input type="email" id="login-email" placeholder="가입하신 이메일 또는 데모 계정" required value="ceo@marketingmap.kr">
+          </div>
+          <div class="input-group">
+            <label for="login-password">비밀번호</label>
+            <input type="password" id="login-password" placeholder="••••••••" required value="123456">
+          </div>
+          <div class="login-helper-row">
+            <label class="remember-me-label">
+              <input type="checkbox" id="login-remember" checked> 로그인 상태 유지
+            </label>
+            <span class="demo-account-badge">데모 계정 자동 입력됨 (ceo@marketingmap.kr)</span>
+          </div>
+          <button type="submit" id="btn-submit-login" class="btn-primary-action">
+            <span>MarketingMap 로그인하기</span>
+          </button>
+          <p class="auth-switch-guide">
+            아직 계정이 없으신가요? <a href="#register" onclick="document.getElementById('tab-register').click(); return false;">무료 회원가입</a>
+          </p>
+        </form>
+
+        <!-- Register Form (약관 동의 및 전문 보기 포함) -->
+        <form id="register-modal-form" class="auth-form">
+          <div class="form-row-2col">
+            <div class="input-group">
+              <label for="register-name">대표자 성함 <span class="required">*</span></label>
+              <input type="text" id="register-name" placeholder="예: 홍길동" required>
+            </div>
+            <div class="input-group">
+              <label for="register-brand">상호명 (브랜드명)</label>
+              <input type="text" id="register-brand" placeholder="예: 오드리고깃집">
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="register-email">이메일 주소 (아이디) <span class="required">*</span></label>
+            <div class="email-check-row">
+              <input type="email" id="register-email" placeholder="example@domain.com" required>
+              <button type="button" id="btn-check-email" class="btn-check-duplicate">중복확인</button>
+            </div>
+            <div id="email-check-msg" class="email-check-msg" style="display: none;"></div>
+          </div>
+          <div class="form-row-2col">
+            <div class="input-group">
+              <label for="register-password">비밀번호 (6자 이상) <span class="required">*</span></label>
+              <input type="password" id="register-password" placeholder="영문·숫자 6자 이상" required minlength="6">
+            </div>
+            <div class="input-group">
+              <label for="register-password-confirm">비밀번호 확인 <span class="required">*</span></label>
+              <input type="password" id="register-password-confirm" placeholder="비밀번호 재입력" required minlength="6">
+            </div>
+          </div>
+          
+          <div class="terms-container">
+            <label class="terms-checkbox terms-all-row">
+              <input type="checkbox" id="terms-all">
+              <strong>전체 약관에 모두 동의합니다 (선택 항목 포함)</strong>
+            </label>
+            <div class="terms-divider"></div>
+            <div class="terms-item-row">
+              <label class="terms-checkbox">
+                <input type="checkbox" id="terms-age" class="terms-sub-check" required>
+                <span>[필수] 만 14세 이상 사업자 또는 개인입니다.</span>
+              </label>
+            </div>
+            <div class="terms-item-row">
+              <label class="terms-checkbox">
+                <input type="checkbox" id="terms-service" class="terms-sub-check" required>
+                <span>[필수] MarketingMap 서비스 이용약관 동의</span>
+              </label>
+              <button type="button" class="btn-terms-toggle" onclick="window.toggleInlineTerms('inline-terms-service')">전문보기</button>
+            </div>
+            <div id="inline-terms-service" class="inline-terms-box hidden">
+              <strong>[MarketingMap 서비스 이용약관 요약 및 전문]</strong><br>
+              제1조(목적) 본 약관은 MarketingMap Studio(이하 "서비스")가 제공하는 AI 마케팅 전략 설계, 채널별 홍보 원고 생성 및 보관함 서비스의 이용 조건을 규정합니다.<br>
+              제2조(저작권 및 활용 권리) 회원이 본 서비스를 통해 생성한 마케팅 전략서, 블로그 원고, 릴스 대본, 당근마켓 소식 문구 등 모든 산출물의 상업적 활용 권리는 회원 본인에게 귀속됩니다.<br>
+              제3조(서비스 제공 및 변경) 회사는 기본 로컬 마케팅 엔진과 외부 AI API 연동 기능을 제공하며, 생성된 리포트는 회원의 보관함에 안전하게 저장됩니다.
+            </div>
+
+            <div class="terms-item-row">
+              <label class="terms-checkbox">
+                <input type="checkbox" id="terms-privacy" class="terms-sub-check" required>
+                <span>[필수] 개인정보 수집 및 이용 동의</span>
+              </label>
+              <button type="button" class="btn-terms-toggle" onclick="window.toggleInlineTerms('inline-terms-privacy')">전문보기</button>
+            </div>
+            <div id="inline-terms-privacy" class="inline-terms-box hidden">
+              <strong>[개인정보 수집 및 이용 안내]</strong><br>
+              1. 수집 항목: 대표자 성함, 이메일 주소, 비밀번호, 상호명 및 비즈니스 마케팅 입력 정보<br>
+              2. 수집 목적: 회원 식별, 맞춤형 마케팅 전략 리포트 생성, 내 마케팅 보관함(아카이브) 연동 및 고객 상담 지원<br>
+              3. 보유 기간: 회원 탈퇴 시까지 보유하며, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 안전하게 보관 후 파기합니다.
+            </div>
+
+            <div class="terms-item-row">
+              <label class="terms-checkbox">
+                <input type="checkbox" id="terms-marketing" class="terms-sub-check">
+                <span>[선택] 업종별 최신 마케팅 비법 및 이벤트 뉴스레터 수신</span>
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" id="btn-submit-register" class="btn-primary-action">
+            <span>동의하고 무료 회원가입 완료</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Profile Modal (내 계정 정보 확인 및 상호명 연동) -->
+  <div id="account-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel" style="max-width: 440px;">
+      <div class="info-overlay-header">
+        <h3>내 계정 및 비즈니스 프로필</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('account-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body text-left">
+        <div id="account-profile-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT Overlay -->
+  <div id="about-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel">
+      <div class="info-overlay-header">
+        <h3>ABOUT · MarketingMap Studio 소개</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('about-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body text-left">
+        <div class="about-hero-banner">
+          <span class="about-badge">AI MARKETING SOLUTION FOR BUSINESS OWNERS</span>
+          <h4>"장사하는 '사장님'에서, 시스템을 가진 '사업가'까지."</h4>
+          <p>대한민국 모든 대표님의 비즈니스 성장을 위한 올인원 AI 마케팅 전략 & 홍보 원고 스튜디오</p>
+        </div>
+
+        <h4>왜 MarketingMap Studio인가요?</h4>
+        <p>좋은 상품과 기술력을 가지고도 <strong>"어떻게 마케팅 시스템을 구축해야 할지 막막해서"</strong>, 혹은 <strong>"비효율적인 광고 대행 비용이 부담스러워서"</strong> 고민하는 외식·프랜차이즈·병의원·부동산·제조·이커머스·전문기업 등 모든 비즈니스 대표님을 위해 탄생했습니다. 좌측 입력창에 우리 비즈니스 핵심 정보만 입력하면 마케팅 컨설턴트 <strong>오드리(Audrey)의 30년 실전 노하우</strong>가 담긴 맞춤형 마케팅 설계도가 즉시 완성됩니다.</p>
+        
+        <h4>5대 핵심 제공 솔루션</h4>
+        <ul class="features-list">
+          <li><strong>01. 이영현 교수의 5단계 마케팅 로드맵 (3TAI 전략) & SEO</strong>: 계기(Trigger) → 목표(Target) → 생각(Thinking) → 실행(Action) → 자기성찰(Introspection)로 이어지는 5단계 3TAI 로드맵과 황금 키워드 8선을 설계합니다.</li>
+          <li><strong>02. AI 검색 추천 최적화 (GEO / AEO)</strong>: 챗GPT, 네이버 AI 브리핑, 제미나이 등 최신 AI 검색에서 우리 비즈니스가 1순위로 추천되도록 학습용 백문백답(FAQ)을 구축합니다.</li>
+          <li><strong>03. 경쟁사 및 자사 브랜드 분석 (3대 전략)</strong>: ① SWOT 분석(교차 전략 포함), ② BCG 매트릭스(Growth-Share Matrix), ③ 위치 매핑(Perceptual Mapping)을 직관적인 시각 다이어그램으로 진단합니다.</li>
+          <li><strong>04. 홍보 채널 마케팅 맵 & 생성형 AI 활용 가이드</strong>: 네이버 블로그(AEO·GEO), 유튜브(롱폼·쇼츠), 인스타 릴스, 당근마켓, 플레이스 리뷰 등 채널별 마스터 프롬프트와 공식 생성형 AI 바로가기를 제공합니다.</li>
+          <li><strong>05. 맞춤 브랜드 스토리 제안 & 보관함 관리</strong>: 스펙 경쟁을 넘어 팬덤을 만드는 우리 비즈니스만의 브랜드 스토리 예시 4종과, 생성한 전략을 언제든 다시 꺼내 보는 <strong>[보관함]</strong> 및 <strong>[PDF 인쇄]</strong>를 지원합니다.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 보관함 (Saved Marketing Blueprints Archive) Overlay -->
+  <div id="blueprints-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel archive-modal-card">
+      <div class="info-overlay-header">
+        <h3>🗂️ 내 비즈니스 마케팅 전략 보관함</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('blueprints-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body text-left">
+        <div class="archive-intro-box">
+          <strong>💡 보관함은 어떤 용도인가요?</strong>
+          <p>대표님이 생성하신 <strong>비즈니스별·시즌 이벤트별 마케팅 전략 리포트와 홍보 원고를 자동 저장해 두고, 언제든 다시 불러와 열람하거나 비교·인쇄할 수 있는 '나만의 마케팅 전략 서재'</strong>입니다. (예: 평일 모객 전략, 주말 가족외식 이벤트 전략 등을 각각 보관해 두고 필요할 때 원클릭으로 불러올 수 있습니다.)</p>
+        </div>
+
+        <div class="archive-list-header">
+          <h4>저장된 마케팅 전략 리스트</h4>
+          <button type="button" class="btn-save-current-archive" onclick="window.saveCurrentToArchive()">+ 현재 화면의 전략 보관함에 추가</button>
+        </div>
+
+        <div id="archive-items-container" class="archive-items-container">
+          <!-- Dynamically populated by app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 요금제 Overlay -->
+  <div id="pricing-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel pricing-modal-card">
+      <div class="info-overlay-header">
+        <h3>MarketingMap · 비즈니스 성장 요금제 안내</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('pricing-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body">
+        <p class="section-desc" style="text-align: center; margin-bottom: 16px;">대행사 월 수십만 원 비용 대신, 커피 몇 잔 값으로 우리 비즈니스만의 AI 마케팅 팀을 고용하세요.</p>
+        <div class="pricing-cards-grid">
+          <div class="pricing-card">
+            <div class="plan-badge">Starter</div>
+            <h4>비즈니스 무료 체험</h4>
+            <div class="plan-price">0원<span>/ 평생 무료</span></div>
+            <ul>
+              <li>오드리 로컬 마케팅 엔진 무제한</li>
+              <li>5대 마케팅 전략 리포트 생성</li>
+              <li>블로그·릴스·당근 기본 원고 제공</li>
+              <li>마케팅 전략서 PDF 인쇄 및 저장</li>
+              <li>내 마케팅 보관함 최대 10개 저장</li>
+            </ul>
+            <button class="btn-plan-select" onclick="document.getElementById('pricing-overlay').classList.remove('active')">현재 이용 중 (무료 시작)</button>
+          </div>
+          
+          <div class="pricing-card premium-plan">
+            <div class="plan-badge hot">BEST · 사업가 추천</div>
+            <h4>비즈니스 프로 (Pro)</h4>
+            <div class="plan-price">19,000원<span>/ 월</span></div>
+            <ul>
+              <li><strong>실시간 Gemini · GPT-4o 정밀 분석</strong></li>
+              <li><strong>오드리 AI 비서 1:1 무제한 맞춤 상담</strong></li>
+              <li>고전환 블로그·릴스·당근 원고 무제한</li>
+              <li>AI 검색(GEO) 1순위 추천 문답 고도화</li>
+              <li>마케팅 보관함 무제한 & 캠페인 비교</li>
+            </ul>
+            <button class="btn-plan-select btn-hot" onclick="alert('현재 오픈 기념으로 프로 플랜의 모든 기능을 무료로 체험하실 수 있습니다! 우측 상단 톱니바퀴(⚙️)에서 API 키를 연동해 보세요.')">프로 플랜 무료 체험하기</button>
+          </div>
+          
+          <div class="pricing-card">
+            <div class="plan-badge">Franchise & B2B</div>
+            <h4>다점포 · 기업 파트너십</h4>
+            <div class="plan-price">별도 문의<span>/ 맞춤형</span></div>
+            <ul>
+              <li>프랜차이즈 가맹점별 지역 키워드 설계</li>
+              <li>브랜드 전용 홍보 원고 톤앤매너 튜닝</li>
+              <li>마케팅 에이전시 대량 리포트 생성권</li>
+              <li>전담 마케팅 컨설턴트 1:1 전략 코칭</li>
+              <li>전용 보안 클라우드 및 API 기술 지원</li>
+            </ul>
+            <button class="btn-plan-select" onclick="document.getElementById('pricing-overlay').classList.remove('active'); document.getElementById('support-chat-panel').classList.add('active');">제휴 · 도입 상담하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 고객센터 Overlay -->
+  <div id="support-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel">
+      <div class="info-overlay-header">
+        <h3>고객센터 & 자주 묻는 질문 (FAQ)</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('support-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body text-left">
+        <div class="support-contact-banner">
+          <div>
+            <strong>📞 오드리 고객지원 센터 안내</strong>
+            <p>평일 09:00 ~ 18:00 (점심시간 12:00 ~ 13:00) | 이메일: <b>support@marketingmap.kr</b></p>
+          </div>
+          <button type="button" class="btn-open-livechat" onclick="document.getElementById('support-overlay').classList.remove('active'); document.getElementById('support-chat-panel').classList.add('active');">💬 1:1 실시간 채팅 상담</button>
+        </div>
+
+        <h4>자주 묻는 질문 (FAQ)</h4>
+        
+        <div class="faq-item">
+          <strong>Q1. AI API 키가 없어도 마케팅 전략과 홍보 원고를 만들 수 있나요?</strong>
+          <p>A. 네, 물론입니다! 별도의 API 키를 입력하지 않아도 <strong>[오드리 로컬 마케팅 엔진]</strong>이 기본 작동하여 우리 비즈니스의 상호명·업종·지역(상권)에 맞춘 5대 마케팅 리포트와 채널별 홍보 원고를 무료로 즉시 생성해 드립니다.</p>
+        </div>
+        <div class="faq-item">
+          <strong>Q2. 상단 메뉴의 [보관함]은 어떻게 활용하나요?</strong>
+          <p>A. 마케팅 전략을 생성하면 <strong>[보관함]</strong>에 자동 저장됩니다. 여러 비즈니스나 시즌별 이벤트(예: 봄 신메뉴 홍보, 재방문 쿠폰 이벤트 등) 전략을 각각 만들어 두고 상단 <strong>[보관함]</strong>에서 언제든 다시 불러와 확인할 수 있습니다.</p>
+        </div>
+        <div class="faq-item">
+          <strong>Q3. 생성된 블로그·인스타·당근마켓 홍보 원고는 그대로 써도 되나요?</strong>
+          <p>A. 네! 우측 <strong>[채널별 홍보 원고]</strong> 탭에서 각 원고 우측의 <strong>[원고 복사]</strong> 버튼을 눌러 블로그, 인스타그램, 당근마켓 비즈프로필에 바로 붙여넣어 사용하실 수 있으며, 현장 사진과 가격만 살짝 덧붙이시면 효과가 배가됩니다.</p>
+        </div>
+        <div class="faq-item">
+          <strong>Q4. 생성된 마케팅 전략서를 인쇄하거나 파일로 소장할 수 있나요?</strong>
+          <p>A. 우측 결과 대시보드 상단의 오렌지색 <strong>[리포트 출력]</strong> 버튼을 누르시면 표지와 주요 전략이 깔끔하게 정돈된 A4 리포트 형태로 인쇄하거나 PDF 파일로 평생 소장하실 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이용약관 및 개인정보처리방침 전문 Overlay -->
+  <div id="terms-overlay" class="info-overlay">
+    <div class="info-overlay-card glass-panel">
+      <div class="info-overlay-header">
+        <h3 id="terms-overlay-title">서비스 이용약관 및 개인정보처리방침</h3>
+        <button class="btn-close-overlay" type="button" onclick="document.getElementById('terms-overlay').classList.remove('active')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="info-overlay-body text-left">
+        <h4>제1장 MarketingMap 서비스 이용약관</h4>
+        <p><strong>제1조 (목적)</strong> 본 약관은 MarketingMap Studio(이하 "회사")가 제공하는 AI 기반 비즈니스 마케팅 전략 설계 및 홍보 원고 생성 서비스의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+        <p><strong>제2조 (산출물의 권리 및 활용)</strong> 회원이 본 서비스를 통해 생성한 키워드 전략, 블로그 포스팅 원고, 릴스 대본, 당근마켓 광고 문구 등 일체의 결과물은 회원의 비즈니스 홍보를 위해 자유롭게 복제·수정·배포할 수 있습니다.</p>
+        <p><strong>제3조 (보관함 및 데이터 관리)</strong> 회원이 생성한 마케팅 전략은 브라우저 로컬 보관함 및 계정 보관함에 저장되며, 회원은 언제든지 보관함에서 데이터를 열람, 백업 또는 삭제할 수 있습니다.</p>
+
+        <h4>제2장 개인정보처리방침</h4>
+        <p><strong>1. 수집하는 개인정보 항목</strong>: 회원가입 및 서비스 이용 시 대표자 성함, 이메일 주소, 상호명(브랜드명), 업종 및 상권 입력 정보를 수집합니다.</p>
+        <p><strong>2. 개인정보의 수집 및 이용목적</strong>: 회원 식별, 맞춤형 AI 마케팅 전략 리포트 생성, 보관함 동기화, 고객 문의 응대 및 신규 마케팅 기능 안내에 활용됩니다.</p>
+        <p><strong>3. 개인정보의 보유 및 파기</strong>: 회원의 개인정보는 원칙적으로 회원 탈퇴 시 지체 없이 파기하며, 외부 AI API(Gemini, OpenAI) Key는 서버로 전송·저장되지 않고 사용자 브라우저에만 안전하게 암호화 보관됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating 1:1 Support Chatbot Widget -->
+  <div class="support-chatbot-wrapper">
+    <button id="support-chat-trigger" class="support-chat-trigger" type="button" title="1:1 실시간 상담">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span class="support-badge-dot"></span>
+    </button>
+    
+    <div id="support-chat-panel" class="support-chat-panel glass-panel">
+      <div class="support-chat-header">
+        <div class="bot-info">
+          <span class="bot-status-dot"></span>
+          <strong>오드리 고객지원</strong>
+          <span class="bot-label">Bot</span>
+        </div>
+        <button id="btn-close-support" class="btn-close-modal" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div id="support-chat-messages" class="support-chat-messages">
+        <div class="support-msg bot">
+          <div class="support-avatar">🙋</div>
+          <div class="support-bubble">
+            안녕하세요! MarketingMap 1:1 고객지원 챗봇 오드리입니다. 궁금하신 항목을 선택하시거나 직접 질문을 입력해 주세요.
+          </div>
+        </div>
+        
+        <div class="support-options-chips">
+          <button type="button" class="support-chip" onclick="window.sendSupportFaq('api_error')">🔑 API 키 없이 무료 사용법</button>
+          <button type="button" class="support-chip" onclick="window.sendSupportFaq('pricing')">💳 요금제 및 보관함 안내</button>
+          <button type="button" class="support-chip" onclick="window.sendSupportFaq('howto')">💻 마케팅 전략 생성 방법</button>
+          <button type="button" class="support-chip" onclick="window.sendSupportFaq('enterprise')">🏢 다점포·제휴 도입 문의</button>
+        </div>
+      </div>
+      
+      <div class="support-chat-input-area">
+        <input type="text" id="support-chat-input" placeholder="궁금한 점을 입력해 주세요...">
+        <button id="btn-send-support" type="button">전송</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20261028_10"></script>
+</body>
+</html>
