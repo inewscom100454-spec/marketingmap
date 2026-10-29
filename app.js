@@ -3436,7 +3436,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     setLoggedInSession(socialUser, token);
     triggerPendingAuthActions();
 
-    const giftNotice = marketingOptIn ? '<br><span style="font-size:12px;color:#ff6b00;">🎁 100일 홍보 캘린더 & 비법 리포트 무료 수신이 등록되었습니다!</span>' : '';
+    const giftNotice = '';
     showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!${giftNotice}`, 'success');
   }
 
