@@ -3266,6 +3266,171 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     });
   }
 
+  // --- Native Google / Naver / Kakao Account Chooser Sheet (Matches Rinnai Mobile Screen) ---
+  let activeOAuth = {
+    provider: 'Google',
+    name: '이영현',
+    email: 'inewscom100454@gmail.com'
+  };
+
+  const oauthOverlay = document.getElementById('social-oauth-overlay');
+  const oauthBackdrop = document.getElementById('oauth-sheet-backdrop');
+  const oauthAccountItem = document.getElementById('oauth-account-item');
+  const oauthBtnOther = document.getElementById('oauth-btn-other');
+  const oauthOtherBox = document.getElementById('oauth-other-input-box');
+  const btnOauthCustomContinue = document.getElementById('btn-oauth-custom-continue');
+
+  function openNativeOAuthSheet(provider) {
+    activeOAuth.provider = provider;
+    if (oauthOtherBox) oauthOtherBox.style.display = 'none';
+
+    const pTitle = document.getElementById('oauth-provider-title');
+    const pSub = document.getElementById('oauth-provider-sub');
+    const pLegal = document.getElementById('oauth-provider-name-text');
+    const pName = document.getElementById('oauth-account-name');
+    const pEmail = document.getElementById('oauth-account-email');
+    const pAvatar = document.getElementById('oauth-account-avatar');
+    const pFallback = document.getElementById('oauth-avatar-fallback');
+
+    if (provider === 'Google') {
+      activeOAuth.name = '이영현';
+      activeOAuth.email = 'inewscom100454@gmail.com';
+      if (pTitle) pTitle.textContent = '계정 선택';
+      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
+      if (pLegal) pLegal.textContent = 'Google';
+      if (pAvatar) {
+        pAvatar.style.background = 'linear-gradient(135deg, #4285F4, #2563eb)';
+        pAvatar.style.color = '#ffffff';
+      }
+      if (pFallback) pFallback.textContent = '이';
+    } else if (provider === '네이버(NAVER)') {
+      activeOAuth.name = '이영현';
+      activeOAuth.email = 'inewscom100454@naver.com';
+      if (pTitle) pTitle.textContent = '네이버 계정 선택';
+      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
+      if (pLegal) pLegal.textContent = 'NAVER';
+      if (pAvatar) {
+        pAvatar.style.background = '#03C75A';
+        pAvatar.style.color = '#ffffff';
+      }
+      if (pFallback) pFallback.textContent = 'N';
+    } else if (provider === '카카오톡(Kakao)') {
+      activeOAuth.name = '이영현';
+      activeOAuth.email = 'inewscom100454@kakao.com';
+      if (pTitle) pTitle.textContent = '카카오 계정 선택';
+      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
+      if (pLegal) pLegal.textContent = 'Kakao';
+      if (pAvatar) {
+        pAvatar.style.background = '#FEE500';
+        pAvatar.style.color = '#191919';
+      }
+      if (pFallback) pFallback.textContent = '카';
+    }
+
+    if (pName) pName.textContent = activeOAuth.name;
+    if (pEmail) pEmail.textContent = activeOAuth.email;
+
+    const mCheck = document.getElementById('oauth-terms-marketing');
+    if (mCheck) mCheck.checked = true;
+
+    if (oauthOverlay) oauthOverlay.classList.add('active');
+  }
+
+  function closeNativeOAuthSheet() {
+    if (oauthOverlay) oauthOverlay.classList.remove('active');
+  }
+
+  async function completeOAuthSignIn(provider, name, email, marketingOptIn) {
+    closeNativeOAuthSheet();
+    closeLoginModal();
+
+    let socialUser = {
+      id: 'usr_oauth_' + Date.now(),
+      name: name.trim() || '이영현',
+      brand: '',
+      email: email.trim().toLowerCase(),
+      marketingOptIn: Boolean(marketingOptIn),
+      provider: provider,
+      createdAt: new Date().toISOString()
+    };
+    let token = '';
+
+    try {
+      const resp = await fetch('/api/auth/social', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider,
+          name: socialUser.name,
+          brand: '',
+          email: socialUser.email,
+          marketingOptIn: Boolean(marketingOptIn)
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.ok && data.user) {
+          socialUser = data.user;
+          token = data.token || '';
+        }
+      }
+    } catch (e) {}
+
+    saveLocalUserRecord(socialUser);
+    setLoggedInSession(socialUser, token);
+    triggerPendingAuthActions();
+
+    const giftNotice = marketingOptIn ? '<br><span style="font-size:12px;color:#ff6b00;">🎁 100일 홍보 캘린더 & 비법 리포트 무료 수신이 등록되었습니다!</span>' : '';
+    showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!${giftNotice}`, 'success');
+  }
+
+  if (oauthAccountItem) {
+    oauthAccountItem.addEventListener('click', () => {
+      const mCheck = document.getElementById('oauth-terms-marketing');
+      completeOAuthSignIn(activeOAuth.provider, activeOAuth.name, activeOAuth.email, mCheck ? mCheck.checked : true);
+    });
+  }
+
+  if (oauthBackdrop) {
+    oauthBackdrop.addEventListener('click', closeNativeOAuthSheet);
+  }
+
+  if (oauthBtnOther && oauthOtherBox) {
+    oauthBtnOther.addEventListener('click', () => {
+      oauthOtherBox.style.display = oauthOtherBox.style.display === 'none' ? 'flex' : 'none';
+      if (oauthOtherBox.style.display === 'flex') {
+        document.getElementById('oauth-custom-name')?.focus();
+      }
+    });
+  }
+
+  if (btnOauthCustomContinue) {
+    btnOauthCustomContinue.addEventListener('click', () => {
+      const cName = (document.getElementById('oauth-custom-name')?.value || '').trim() || '대표';
+      const cEmail = (document.getElementById('oauth-custom-email')?.value || '').trim();
+      if (!cEmail || !cEmail.includes('@')) {
+        alert('올바른 이메일 주소를 입력해 주세요.');
+        return;
+      }
+      const mCheck = document.getElementById('oauth-terms-marketing');
+      completeOAuthSignIn(activeOAuth.provider, cName, cEmail, mCheck ? mCheck.checked : true);
+    });
+  }
+
+  // Circular social buttons event binding
+  const btnCircleGoogle = document.getElementById('btn-circle-google');
+  if (btnCircleGoogle) {
+    btnCircleGoogle.addEventListener('click', () => openNativeOAuthSheet('Google'));
+  }
+  const btnCircleNaver = document.getElementById('btn-circle-naver');
+  if (btnCircleNaver) {
+    btnCircleNaver.addEventListener('click', () => openNativeOAuthSheet('네이버(NAVER)'));
+  }
+  const btnCircleKakao = document.getElementById('btn-circle-kakao');
+  if (btnCircleKakao) {
+    btnCircleKakao.addEventListener('click', () => openNativeOAuthSheet('카카오톡(Kakao)'));
+  }
+
   // --- 1:1 Floating Support Chatbot ---
   const supportChatTrigger = document.getElementById('support-chat-trigger');
   const supportChatPanel = document.getElementById('support-chat-panel');
