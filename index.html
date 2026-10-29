@@ -363,6 +363,20 @@
             </div>
           </div>
 
+          <!-- Second Hook: Marketing Opt-in Gift Banner for Leads -->
+          <div id="marketing-gift-hook-banner" class="marketing-gift-hook-banner" style="display: none;">
+            <div class="gift-banner-left">
+              <span class="gift-banner-emoji">🎁</span>
+              <div class="gift-banner-texts">
+                <strong>[무료 선물] 100일 홍보 실행 로드맵 캘린더 원본 & 주간 마케팅 비법</strong>
+                <span>지금 마케팅 무료 수신에 동의하시면 이메일로 캘린더 원본(Excel/PDF)을 즉시 발송해 드립니다.</span>
+              </div>
+            </div>
+            <button type="button" class="btn-claim-gift-optin" onclick="window.claimMarketingOptInGift()">
+              <span>1초 만에 무료 선물 받고 수신 동의</span>
+            </button>
+          </div>
+
           <!-- Navigation Tabs -->
           <nav class="dashboard-tabs">
             <button class="tab-btn active" data-tab="seo">
@@ -1242,37 +1256,87 @@
         <div id="auth-feedback-banner" class="auth-feedback-banner" style="display: none;"></div>
         
         <!-- Social Login & Signup Options (Kakao, Naver, Google) -->
-        <div class="social-login-group">
-          <button type="button" id="btn-kakao-login" class="btn-social-login btn-kakao">
-            <svg viewBox="0 0 24 24" style="width: 17px; height: 17px;">
-              <path fill="#191919" d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.75-.15.54-.96 3.47-1 3.63-.05.22.08.22.17.16.07-.05 2.79-1.89 3.92-2.66.72.1 1.46.12 2.23.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
-            </svg>
-            <span>카카오톡으로 3초 만에 시작하기</span>
-          </button>
+        <div id="social-default-view">
+          <div class="social-login-group">
+            <button type="button" id="btn-kakao-login" class="btn-social-login btn-kakao">
+              <svg viewBox="0 0 24 24" style="width: 17px; height: 17px;">
+                <path fill="#191919" d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.75-.15.54-.96 3.47-1 3.63-.05.22.08.22.17.16.07-.05 2.79-1.89 3.92-2.66.72.1 1.46.12 2.23.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+              </svg>
+              <span>카카오톡으로 3초 만에 시작하기</span>
+            </button>
 
-          <button type="button" id="btn-naver-login" class="btn-social-login btn-naver">
-            <svg viewBox="0 0 24 24" style="width: 15px; height: 15px;">
-              <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"/>
-            </svg>
-            <span>네이버 아이디로 시작하기</span>
-          </button>
+            <button type="button" id="btn-naver-login" class="btn-social-login btn-naver">
+              <svg viewBox="0 0 24 24" style="width: 15px; height: 15px;">
+                <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"/>
+              </svg>
+              <span>네이버 아이디로 시작하기</span>
+            </button>
 
-          <button type="button" id="btn-google-login" class="btn-social-login btn-google-login">
-            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-              <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.64l3.15-3.15C17.45 1.76 14.94 1 12 1 7.35 1 3.4 3.65 1.48 7.5l3.85 3C6.3 7.8 8.93 5.04 12 5.04z"/>
-              <path fill="#4285F4" d="M23.45 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.43c-.28 1.44-1.1 2.66-2.33 3.48l3.61 2.8c2.1-1.93 3.74-4.78 3.74-8.43z"/>
-              <path fill="#FBBC05" d="M5.33 14.5A7.16 7.16 0 0 1 4.96 12c0-.87.13-1.7.37-2.5L1.48 6.5A11.96 11.96 0 0 0 0 12c0 2 0 4 .5 5.5l4.83-3z"/>
-              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1 .67-2.28 1.07-4.36 1.07-3.07 0-5.7-2.76-6.67-5.46l-3.85 3C3.4 20.35 7.35 23 12 23z"/>
-            </svg>
-            <span>Google 계정으로 시작하기</span>
-          </button>
+            <button type="button" id="btn-google-login" class="btn-social-login btn-google-login">
+              <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.64l3.15-3.15C17.45 1.76 14.94 1 12 1 7.35 1 3.4 3.65 1.48 7.5l3.85 3C6.3 7.8 8.93 5.04 12 5.04z"/>
+                <path fill="#4285F4" d="M23.45 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.43c-.28 1.44-1.1 2.66-2.33 3.48l3.61 2.8c2.1-1.93 3.74-4.78 3.74-8.43z"/>
+                <path fill="#FBBC05" d="M5.33 14.5A7.16 7.16 0 0 1 4.96 12c0-.87.13-1.7.37-2.5L1.48 6.5A11.96 11.96 0 0 0 0 12c0 2 0 4 .5 5.5l4.83-3z"/>
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1 .67-2.28 1.07-4.36 1.07-3.07 0-5.7-2.76-6.67-5.46l-3.85 3C3.4 20.35 7.35 23 12 23z"/>
+              </svg>
+              <span>Google 계정으로 시작하기</span>
+            </button>
+          </div>
+          
+          <div class="auth-divider">
+            <span>또는 이메일 계정으로 진행</span>
+          </div>
         </div>
-        <div class="social-terms-notice">
-          ℹ️ 소셜 로그인 시 서비스 이용약관 및 개인정보 수집에 동의하게 되며, 마케팅 정보 수신은 <strong>미동의</strong> 상태로 안전하게 가입됩니다.
-        </div>
-        
-        <div class="auth-divider">
-          <span>또는 이메일 계정으로 진행</span>
+
+        <!-- 1-Click Social OAuth Consent View (Zero Manual Typing) -->
+        <div id="social-consent-view" class="social-consent-view" style="display: none;">
+          <div class="social-consent-card">
+            <div class="social-provider-badge" id="sc-badge">
+              <span id="sc-icon"></span>
+              <span id="sc-provider-title">Google 계정으로 계속</span>
+            </div>
+            <h3 class="social-consent-title" id="sc-title">MarketingMap 서비스 연동</h3>
+            <p class="social-consent-subtitle">수기 입력 없이 내 소셜 계정으로 1초 만에 안전하게 연결됩니다.</p>
+            
+            <div class="social-account-card">
+              <div class="social-account-avatar" id="sc-avatar">G</div>
+              <div class="social-account-info">
+                <div class="social-account-name" id="sc-user-name">구글 대표님</div>
+                <div class="social-account-email" id="sc-user-email">ceo.google@gmail.com</div>
+              </div>
+              <span class="social-verified-tag">✓ 계정 확인됨</span>
+            </div>
+
+            <div class="social-terms-box">
+              <label class="terms-checkbox sc-all-row">
+                <input type="checkbox" id="sc-terms-all" checked>
+                <div class="terms-all-text-wrapper">
+                  <strong>전체 약관에 모두 동의합니다</strong>
+                  <span class="terms-lead-badge">🎁 100일 캘린더 & 비법 리포트 증정</span>
+                </div>
+              </label>
+              <div class="terms-divider"></div>
+              <div class="terms-item-row">
+                <label class="terms-checkbox">
+                  <input type="checkbox" id="sc-terms-required" checked disabled>
+                  <span>[필수] 만 14세 이상 및 서비스 이용약관 동의</span>
+                </label>
+              </div>
+              <div class="terms-item-row">
+                <label class="terms-checkbox">
+                  <input type="checkbox" id="sc-terms-marketing" checked>
+                  <span class="terms-marketing-benefit-text">🎁 <strong>[선택]</strong> 100일 홍보 로드맵 캘린더 + 마케팅 비법 수신 (추천)</span>
+                </label>
+              </div>
+            </div>
+
+            <button type="button" id="btn-sc-confirm" class="btn-sc-submit">
+              <span id="btn-sc-btn-label">Google 계정으로 1초 만에 계속하기</span>
+            </button>
+            <button type="button" id="btn-sc-cancel" class="btn-sc-back">
+              ← 다른 방식으로 로그인
+            </button>
+          </div>
         </div>
         
         <!-- Login Form -->
@@ -1330,10 +1394,13 @@
             </div>
           </div>
           
-          <div class="terms-container">
+          <div class="terms-container terms-lead-box">
             <label class="terms-checkbox terms-all-row">
               <input type="checkbox" id="terms-all">
-              <strong>전체 약관에 모두 동의합니다 (선택 항목 포함)</strong>
+              <div class="terms-all-text-wrapper">
+                <strong>전체 약관에 모두 동의합니다</strong>
+                <span class="terms-lead-badge">🎁 100일 홍보 캘린더 & 비법 리포트 무료 증정</span>
+              </div>
             </label>
             <div class="terms-divider"></div>
             <div class="terms-item-row">
@@ -1373,7 +1440,7 @@
             <div class="terms-item-row">
               <label class="terms-checkbox">
                 <input type="checkbox" id="terms-marketing" class="terms-sub-check">
-                <span>[선택] 업종별 최신 마케팅 비법 및 이벤트 뉴스레터 수신</span>
+                <span class="terms-marketing-benefit-text">🎁 <strong>[선택]</strong> 100일 홍보 로드맵 캘린더 + 매주 업종별 마케팅 비법 리포트 무료 수신 (추천)</span>
               </label>
             </div>
           </div>
