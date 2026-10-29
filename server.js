@@ -134,6 +134,9 @@ const server = http.createServer(async (req, res) => {
       const email = (body.email || '').trim().toLowerCase();
       const password = String(body.password || '');
       const marketingOptIn = Boolean(body.marketingOptIn);
+      const termsAge = Boolean(body.termsAge);
+      const termsService = Boolean(body.termsService);
+      const termsPrivacy = Boolean(body.termsPrivacy);
 
       if (!name) {
         return sendJson(res, 400, { ok: false, message: '대표자 성함을 입력해 주세요.' });
@@ -143,6 +146,9 @@ const server = http.createServer(async (req, res) => {
       }
       if (password.length < 6) {
         return sendJson(res, 400, { ok: false, message: '비밀번호는 6자 이상 입력해 주세요.' });
+      }
+      if (!termsAge || !termsService || !termsPrivacy) {
+        return sendJson(res, 400, { ok: false, message: '서비스 이용을 위해 필수 약관에 모두 동의해 주세요.' });
       }
 
       const users = loadUsers();
