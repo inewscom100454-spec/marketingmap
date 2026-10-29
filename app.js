@@ -3267,10 +3267,66 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
 
   // --- Native Google / Naver / Kakao Account Chooser Sheet (Matches Rinnai Mobile Screen) ---
+  const KAKAO_JS_KEY = '37cf83af5b8e6b8cd60edf673d87b631';
+
+  function initKakaoSDK() {
+    try {
+      if (window.Kakao && !window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_JS_KEY);
+      }
+    } catch (e) {
+      console.warn('Kakao init:', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    if (window.Kakao) {
+      initKakaoSDK();
+    } else {
+      window.addEventListener('load', initKakaoSDK);
+    }
+  }
+
+  function handleRealKakaoLogin() {
+    initKakaoSDK();
+    if (!window.Kakao || typeof window.Kakao.Auth?.login !== 'function') {
+      openNativeOAuthSheet('카카오톡(Kakao)');
+      return;
+    }
+
+    try {
+      window.Kakao.Auth.login({
+        scope: 'profile_nickname,account_email',
+        success: function(authObj) {
+          window.Kakao.API.request({
+            url: '/v2/user/me',
+            success: function(res) {
+              const kakaoAccount = res.kakao_account || {};
+              const profile = kakaoAccount.profile || {};
+              const userName = profile.nickname || '카카오 회원';
+              const userEmail = kakaoAccount.email || `kakao_${res.id}@marketingmap.kr`;
+              completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail, true);
+            },
+            fail: function(error) {
+              console.error(error);
+              openNativeOAuthSheet('카카오톡(Kakao)');
+            }
+          });
+        },
+        fail: function(err) {
+          console.error(err);
+          openNativeOAuthSheet('카카오톡(Kakao)');
+        }
+      });
+    } catch (e) {
+      openNativeOAuthSheet('카카오톡(Kakao)');
+    }
+  }
+
   let activeOAuth = {
     provider: 'Google',
-    name: '이영현',
-    email: 'inewscom100454@gmail.com'
+    name: '구글 대표님',
+    email: '내 Google 계정으로 연동'
   };
 
   const oauthOverlay = document.getElementById('social-oauth-overlay');
@@ -3428,7 +3484,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
   const btnCircleKakao = document.getElementById('btn-circle-kakao');
   if (btnCircleKakao) {
-    btnCircleKakao.addEventListener('click', () => openNativeOAuthSheet('카카오톡(Kakao)'));
+    btnCircleKakao.addEventListener('click', () => handleRealKakaoLogin());
   }
 
   // --- 1:1 Floating Support Chatbot ---
