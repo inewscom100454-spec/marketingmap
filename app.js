@@ -3323,6 +3323,95 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     }
   }
 
+  // --- Google Identity Services (GIS) Real Login ---
+  const GOOGLE_CLIENT_ID = '922694159566-8t2dun8coqv923h9qvg1fd3hir4hkana.apps.googleusercontent.com';
+  let googleTokenClient = null;
+
+  function parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function handleGoogleCredentialResponse(response) {
+    if (response && response.credential) {
+      const payload = parseJwt(response.credential);
+      if (payload) {
+        const userName = payload.name || '구글 회원';
+        const userEmail = payload.email || `google_user@gmail.com`;
+        completeOAuthSignIn('Google', userName, userEmail, true);
+      }
+    }
+  }
+
+  function initGoogleSDK() {
+    try {
+      if (typeof window !== 'undefined' && window.google && window.google.accounts) {
+        if (window.google.accounts.id) {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false
+          });
+        }
+        if (window.google.accounts.oauth2 && !googleTokenClient) {
+          googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+            callback: async (tokenResponse) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                try {
+                  const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                  });
+                  if (res.ok) {
+                    const userInfo = await res.json();
+                    const userName = userInfo.name || '구글 회원';
+                    const userEmail = userInfo.email || `google_${Date.now()}@gmail.com`;
+                    completeOAuthSignIn('Google', userName, userEmail, true);
+                    return;
+                  }
+                } catch (err) {
+                  console.error('Google userinfo fetch error:', err);
+                }
+              }
+              openNativeOAuthSheet('Google');
+            },
+            error_callback: (err) => {
+              console.warn('Google auth cancelled/error:', err);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Google SDK init error:', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      initGoogleSDK();
+    });
+  }
+
+  function handleRealGoogleLogin() {
+    initGoogleSDK();
+    if (googleTokenClient) {
+      try {
+        googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (e) {
+        console.warn('Request access token error:', e);
+      }
+    }
+    openNativeOAuthSheet('Google');
+  }
+
   let activeOAuth = {
     provider: 'Google',
     name: '구글 대표님',
@@ -3476,7 +3565,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // Circular social buttons event binding
   const btnCircleGoogle = document.getElementById('btn-circle-google');
   if (btnCircleGoogle) {
-    btnCircleGoogle.addEventListener('click', () => openNativeOAuthSheet('Google'));
+    btnCircleGoogle.addEventListener('click', () => handleRealGoogleLogin());
   }
   const btnCircleNaver = document.getElementById('btn-circle-naver');
   if (btnCircleNaver) {
