@@ -2838,6 +2838,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       document.querySelectorAll('.terms-sub-check').forEach(chk => {
         chk.checked = checked;
       });
+      const termsContainer = document.querySelector('.terms-container');
+      if (termsContainer) termsContainer.classList.remove('terms-error-highlight');
+      showAuthFeedback('');
     });
   }
   document.querySelectorAll('.terms-sub-check').forEach(chk => {
@@ -2846,6 +2849,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       if (termsAllCheck) {
         termsAllCheck.checked = allSubs.every(c => c.checked);
       }
+      const termsContainer = document.querySelector('.terms-container');
+      if (termsContainer) termsContainer.classList.remove('terms-error-highlight');
+      showAuthFeedback('');
     });
   });
 
@@ -3120,23 +3126,45 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const passwordVal = document.getElementById('register-password')?.value || '';
       const passwordConfirmEl = document.getElementById('register-password-confirm');
       const passwordConfirmVal = passwordConfirmEl ? passwordConfirmEl.value : passwordVal;
-      const marketingOptIn = Boolean(document.getElementById('terms-marketing')?.checked);
+      const termsAge = document.getElementById('terms-age');
+      const termsService = document.getElementById('terms-service');
+      const termsPrivacy = document.getElementById('terms-privacy');
+      const termsMarketing = document.getElementById('terms-marketing');
+      const marketingOptIn = Boolean(termsMarketing?.checked);
+      const termsContainer = document.querySelector('.terms-container');
+      if (termsContainer) termsContainer.classList.remove('terms-error-highlight');
 
       if (!nameVal) {
         showAuthFeedback('대표자 성함을 입력해 주세요.', 'error');
+        document.getElementById('register-name')?.focus();
         return;
       }
       if (!emailVal || !emailVal.includes('@')) {
         showAuthFeedback('올바른 이메일 주소를 입력해 주세요.', 'error');
+        document.getElementById('register-email')?.focus();
         return;
       }
       if (passwordVal.length < 6) {
         showAuthFeedback('비밀번호는 6자 이상 입력해 주세요.', 'error');
+        document.getElementById('register-password')?.focus();
         return;
       }
       if (passwordConfirmEl && passwordVal !== passwordConfirmVal) {
         showAuthFeedback('비밀번호와 비밀번호 확인이 일치하지 않습니다. 다시 확인해 주세요.', 'error');
         passwordConfirmEl.focus();
+        return;
+      }
+
+      // 약관 동의 여부 엄격 검증 (전체 동의 또는 필수 항목 미동의 시 차단)
+      if (!termsAge?.checked || !termsService?.checked || !termsPrivacy?.checked) {
+        showAuthFeedback('⚠️ 서비스 이용을 위해 [전체 동의] 또는 필수 이용약관에 모두 체크해 주세요.', 'error');
+        if (termsContainer) {
+          termsContainer.classList.add('terms-error-highlight');
+          termsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        if (!termsAge?.checked) termsAge?.focus();
+        else if (!termsService?.checked) termsService?.focus();
+        else if (!termsPrivacy?.checked) termsPrivacy?.focus();
         return;
       }
 
@@ -3161,6 +3189,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
             brand: brandVal,
             email: emailVal,
             password: passwordVal,
+            termsAge: termsAge?.checked,
+            termsService: termsService?.checked,
+            termsPrivacy: termsPrivacy?.checked,
             marketingOptIn
           })
         });
