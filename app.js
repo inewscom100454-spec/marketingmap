@@ -1699,6 +1699,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // --- Dynamic Renderer ---
   function renderBlueprint(data, brand, category, idea, region, target) {
     generatedData = data;
+    if (typeof updateMarketingGiftBanner === 'function') {
+      updateMarketingGiftBanner();
+    }
     
     const cleanBrand = stripHtmlTags(brand) || '우리 매장';
     const cleanCategory = stripHtmlTags(category) || '';
@@ -2768,7 +2771,40 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       `;
       bindAuthModalTriggers();
     }
+    updateMarketingGiftBanner();
   }
+
+  function updateMarketingGiftBanner() {
+    const banner = document.getElementById('marketing-gift-hook-banner');
+    if (!banner) return;
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    const profile = getCurrentUserProfile();
+    if (isLoggedIn && profile && !profile.marketingOptIn && generatedData) {
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  window.claimMarketingOptInGift = async function() {
+    let profile = getCurrentUserProfile();
+    if (!profile) return;
+    profile.marketingOptIn = true;
+    localStorage.setItem('current_user_profile', JSON.stringify(profile));
+
+    const banner = document.getElementById('marketing-gift-hook-banner');
+    if (banner) banner.style.display = 'none';
+
+    try {
+      await fetch('/api/auth/profile/marketing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: profile.email, marketingOptIn: true })
+      });
+    } catch (e) {}
+
+    alert('🎁 축하합니다! 100일 홍보 캘린더 원본(Excel/PDF)과 주간 마케팅 비법 리포트 무료 수신이 성공적으로 등록되었습니다.');
+  };
 
   function showLoginModal(noticeText = '', mode = 'login') {
     if (!loginModal) return;
@@ -2778,6 +2814,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       loginNotice.style.display = 'block';
     } else {
       loginNotice.style.display = 'none';
+    }
+    if (typeof hideSocialConsentView === 'function') {
+      hideSocialConsentView();
     }
     const tLogin = document.getElementById('tab-login');
     const tRegister = document.getElementById('tab-register');
@@ -2791,6 +2830,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
   function closeLoginModal() {
     if (!loginModal) return;
+    if (typeof hideSocialConsentView === 'function') {
+      hideSocialConsentView();
+    }
     loginModal.classList.remove('active');
     showAuthFeedback('');
   }
@@ -3230,8 +3272,10 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     });
   }
 
-  // --- Social OAuth Popup & Backend Integration (Kakao, Naver, Google) ---
-  async function completeSocialLogin(providerLabel, userName, userBrand = '', userEmail = '') {
+  // --- 1-Click Social OAuth Linking (Zero Manual Typing & Marketing Consent Optimization) ---
+  let activeSocialProvider = null;
+
+  async function completeSocialLogin(providerLabel, userName, userBrand = '', userEmail = '', marketingOptIn = true) {
     const cleanName = (userName || `${providerLabel} 대표`).replace(/님$/, '').trim();
     const cleanBrand = (userBrand || '').trim();
     const cleanEmail = (userEmail || `${providerLabel.replace(/[^a-zA-Z]/g, '').toLowerCase()}_ceo@marketingmap.kr`).trim().toLowerCase();
@@ -3241,7 +3285,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       name: cleanName,
       brand: cleanBrand,
       email: cleanEmail,
-      marketingOptIn: false,
+      marketingOptIn: Boolean(marketingOptIn),
       provider: providerLabel,
       createdAt: new Date().toISOString()
     };
@@ -3256,7 +3300,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           name: cleanName,
           brand: cleanBrand,
           email: cleanEmail,
-          marketingOptIn: false
+          marketingOptIn: Boolean(marketingOptIn)
         })
       });
       if (resp.ok) {
@@ -3272,117 +3316,154 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
     saveLocalUserRecord(socialUser);
     setLoggedInSession(socialUser, token);
+    hideSocialConsentView();
     closeLoginModal();
     triggerPendingAuthActions();
+    
+    // Welcome floating feedback
+    const giftNotice = marketingOptIn ? '<br><span style="font-size:12px;color:#ff6b00;">🎁 100일 홍보 캘린더 & 비법 리포트 무료 수신이 등록되었습니다!</span>' : '';
+    showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name}님</strong>!${giftNotice}`, 'success');
   }
 
-  function openSocialLoginPopup(providerLabel, brandColor, textColor, defaultName) {
-    const width = 440;
-    const height = 500;
-    const left = (screen.width - width) / 2;
-    const top = (screen.height - height) / 2;
-    
-    const popup = window.open('', 'SocialLoginPopup', `width=${width},height=${height},left=${left},top=${top},menubar=no,status=no,toolbar=no`);
-    if (!popup) {
-      completeSocialLogin(providerLabel, defaultName, '');
-      return;
+  function showSocialConsentView(provider, brandColor, textColor, defaultName, defaultEmail, avatarBg, avatarText) {
+    activeSocialProvider = {
+      provider,
+      brandColor,
+      textColor,
+      name: defaultName,
+      email: defaultEmail
+    };
+
+    const defaultView = document.getElementById('social-default-view');
+    const consentView = document.getElementById('social-consent-view');
+    const loginForm = document.getElementById('login-modal-form');
+    const registerForm = document.getElementById('register-modal-form');
+    const authTabs = document.querySelector('.auth-tabs');
+
+    if (defaultView) defaultView.style.display = 'none';
+    if (loginForm) loginForm.style.display = 'none';
+    if (registerForm) registerForm.style.display = 'none';
+    if (authTabs) authTabs.style.display = 'none';
+
+    const badge = document.getElementById('sc-badge');
+    if (badge) {
+      badge.style.background = brandColor;
+      badge.style.color = textColor;
     }
-    popup.document.write(`
-      <!DOCTYPE html>
-      <html lang="ko">
-      <head>
-        <meta charset="UTF-8">
-        <title>${providerLabel} 간편 로그인 · 회원가입</title>
-        <style>
-          * { box-sizing: border-box; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #18181b; color: #18181b; padding: 16px; }
-          .card { background: #ffffff; padding: 28px 24px; border-radius: 16px; box-shadow: 0 14px 36px rgba(0,0,0,0.35); width: 100%; max-width: 380px; }
-          .badge { display: inline-block; background: ${brandColor}; color: ${textColor}; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
-          h3 { margin: 0 0 6px 0; font-size: 18px; color: #18181b; }
-          p { margin: 0 0 18px 0; font-size: 12.5px; color: #52525b; line-height: 1.45; }
-          .field { margin-bottom: 12px; text-align: left; }
-          .field label { display: block; font-size: 11.5px; font-weight: 700; color: #27272a; margin-bottom: 5px; }
-          .field input { width: 100%; padding: 10px 12px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 13px; outline: none; }
-          .field input:focus { border-color: #ff6b00; }
-          .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #ff6b00; color: #ffffff; font-size: 13.5px; font-weight: 800; cursor: pointer; margin-top: 6px; }
-          .btn-submit:hover { background: #ea580c; }
-          .footer-note { margin-top: 12px; font-size: 11px; color: #71717a; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <span class="badge">${providerLabel} 공식 간편 연동</span>
-          <h3>3초 만에 MarketingMap 시작하기</h3>
-          <p>마케팅 리포트에 표시될 대표님 성함과 상호명(선택)을 확인해 주세요.</p>
-          <form id="social-form">
-            <div class="field">
-              <label>대표자 성함 (필수)</label>
-              <input type="text" id="s-name" value="${defaultName.replace(/님$/, '')}" required placeholder="예: 홍길동">
-            </div>
-            <div class="field">
-              <label>우리 비즈니스 상호명 (선택 · 입력 시 자동 연동)</label>
-              <input type="text" id="s-brand" placeholder="예: 오드리고깃집, 서울밝은치과">
-            </div>
-            <div class="field">
-              <label>연동 이메일 주소</label>
-              <input type="email" id="s-email" value="${providerLabel.replace(/[^a-zA-Z]/g, '').toLowerCase()}_ceo@marketingmap.kr" required>
-            </div>
-            <button type="submit" class="btn-submit">동의하고 즉시 시작하기</button>
-          </form>
-          <div class="footer-note">MarketingMap 보안 인증 세션으로 안전하게 보호됩니다.</div>
-        </div>
-        <script>
-          document.getElementById('social-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var name = document.getElementById('s-name').value.trim() || '${defaultName}';
-            var brand = document.getElementById('s-brand').value.trim();
-            var email = document.getElementById('s-email').value.trim();
-            window.opener.postMessage({
-              type: 'social-login-success',
-              provider: '${providerLabel}',
-              name: name,
-              brand: brand,
-              email: email
-            }, '*');
-            window.close();
-          });
-        <\/script>
-      </body>
-      </html>
-    `);
+    const providerTitle = document.getElementById('sc-provider-title');
+    if (providerTitle) providerTitle.textContent = `${provider} 공식 간편 연동`;
+
+    const titleEl = document.getElementById('sc-title');
+    if (titleEl) titleEl.textContent = `MarketingMap에 ${provider} 계정으로 로그인`;
+
+    const avatarEl = document.getElementById('sc-avatar');
+    if (avatarEl) {
+      avatarEl.style.background = avatarBg || brandColor;
+      avatarEl.style.color = textColor;
+      avatarEl.textContent = avatarText || provider.charAt(0);
+    }
+
+    const nameEl = document.getElementById('sc-user-name');
+    if (nameEl) nameEl.textContent = defaultName;
+
+    const emailEl = document.getElementById('sc-user-email');
+    if (emailEl) emailEl.textContent = defaultEmail;
+
+    const btnSubmit = document.getElementById('btn-sc-confirm');
+    const btnLabel = document.getElementById('btn-sc-btn-label');
+    if (btnSubmit) {
+      btnSubmit.style.background = brandColor;
+      btnSubmit.style.color = textColor;
+      if (brandColor === '#FEE500') btnSubmit.style.color = '#191919';
+    }
+    if (btnLabel) {
+      btnLabel.textContent = `${provider} 계정으로 1초 만에 계속하기`;
+    }
+
+    const termsAll = document.getElementById('sc-terms-all');
+    const termsMarketing = document.getElementById('sc-terms-marketing');
+    if (termsAll) termsAll.checked = true;
+    if (termsMarketing) termsMarketing.checked = true;
+
+    if (consentView) consentView.style.display = 'block';
+  }
+
+  function hideSocialConsentView() {
+    const defaultView = document.getElementById('social-default-view');
+    const consentView = document.getElementById('social-consent-view');
+    const authTabs = document.querySelector('.auth-tabs');
+    const tLogin = document.getElementById('tab-login');
+    const tRegister = document.getElementById('tab-register');
+
+    if (consentView) consentView.style.display = 'none';
+    if (defaultView) defaultView.style.display = 'block';
+    if (authTabs) authTabs.style.display = 'flex';
+
+    if (tLogin && tLogin.classList.contains('active')) {
+      tLogin.click();
+    } else if (tRegister) {
+      tRegister.click();
+    }
+  }
+
+  const btnScConfirm = document.getElementById('btn-sc-confirm');
+  if (btnScConfirm) {
+    btnScConfirm.addEventListener('click', () => {
+      if (!activeSocialProvider) return;
+      const termsMarketing = document.getElementById('sc-terms-marketing');
+      const marketingOptIn = Boolean(termsMarketing?.checked);
+      completeSocialLogin(
+        activeSocialProvider.provider,
+        activeSocialProvider.name,
+        '',
+        activeSocialProvider.email,
+        marketingOptIn
+      );
+    });
+  }
+
+  const btnScCancel = document.getElementById('btn-sc-cancel');
+  if (btnScCancel) {
+    btnScCancel.addEventListener('click', () => {
+      hideSocialConsentView();
+    });
+  }
+
+  const scTermsAll = document.getElementById('sc-terms-all');
+  if (scTermsAll) {
+    scTermsAll.addEventListener('change', (e) => {
+      const checked = e.target.checked;
+      const m = document.getElementById('sc-terms-marketing');
+      if (m) m.checked = checked;
+    });
+  }
+  const scTermsMarketing = document.getElementById('sc-terms-marketing');
+  if (scTermsMarketing) {
+    scTermsMarketing.addEventListener('change', (e) => {
+      if (scTermsAll) scTermsAll.checked = e.target.checked;
+    });
   }
 
   const btnKakaoLogin = document.getElementById('btn-kakao-login');
   if (btnKakaoLogin) {
     btnKakaoLogin.addEventListener('click', () => {
-      openSocialLoginPopup('카카오톡(Kakao)', '#FEE500', '#191919', '카카오 대표');
+      showSocialConsentView('카카오톡(Kakao)', '#FEE500', '#191919', '카카오 연동 대표님', 'kakao_ceo@marketingmap.kr', '#FEE500', '💬');
     });
   }
 
   const btnNaverLogin = document.getElementById('btn-naver-login');
   if (btnNaverLogin) {
     btnNaverLogin.addEventListener('click', () => {
-      openSocialLoginPopup('네이버(NAVER)', '#03C75A', '#ffffff', '네이버 대표');
+      showSocialConsentView('네이버(NAVER)', '#03C75A', '#ffffff', '네이버 연동 대표님', 'naver_ceo@marketingmap.kr', '#03C75A', 'N');
     });
   }
 
   const btnGoogleLogin = document.getElementById('btn-google-login');
   if (btnGoogleLogin) {
     btnGoogleLogin.addEventListener('click', () => {
-      openSocialLoginPopup('Google', '#4285F4', '#ffffff', '구글 대표');
+      showSocialConsentView('Google', '#4285F4', '#ffffff', 'Google 연동 대표님', 'google_ceo@marketingmap.kr', '#4285F4', 'G');
     });
   }
-
-  window.addEventListener('message', (e) => {
-    if (e.data && (e.data.type === 'social-login-success' || e.data.type === 'google-login-success')) {
-      completeSocialLogin(
-        e.data.provider || '소셜인증',
-        e.data.name || '대표',
-        e.data.brand || '',
-        e.data.email || ''
-      );
-    }
-  });
 
   // --- 1:1 Floating Support Chatbot ---
   const supportChatTrigger = document.getElementById('support-chat-trigger');
