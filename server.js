@@ -277,12 +277,33 @@ const server = http.createServer(async (req, res) => {
           name: user.name,
           brand: user.brand || '',
           email: user.email,
+          marketingOptIn: Boolean(user.marketingOptIn),
           provider: user.provider,
           createdAt: user.createdAt
         }
       });
     } catch (err) {
       return sendJson(res, 400, { ok: false, message: '소셜 인증 처리 중 오류가 발생했습니다.' });
+    }
+  }
+
+  // Update marketing opt-in
+  if (reqPath === '/api/auth/profile/marketing' && req.method === 'POST') {
+    try {
+      const body = await parseRequestBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const marketingOptIn = Boolean(body.marketingOptIn);
+
+      const users = loadUsers();
+      const user = users.find(u => u.email.toLowerCase() === email);
+      if (user) {
+        user.marketingOptIn = marketingOptIn;
+        saveUsers(users);
+        return sendJson(res, 200, { ok: true, message: '마케팅 수신 상태가 성공적으로 변경되었습니다.' });
+      }
+      return sendJson(res, 404, { ok: false, message: '사용자를 찾을 수 없습니다.' });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '서버 오류' });
     }
   }
 
