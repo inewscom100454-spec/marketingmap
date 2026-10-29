@@ -3412,6 +3412,90 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     openNativeOAuthSheet('Google');
   }
 
+  // --- Naver Official SDK Real Login ---
+  const NAVER_CLIENT_ID = 'j5YHum84smI_wsFW4QWq';
+  let naverLoginInstance = null;
+
+  function initNaverSDK() {
+    try {
+      if (typeof window !== 'undefined' && window.naver && window.naver.LoginWithNaverId) {
+        if (!naverLoginInstance) {
+          const currentUrl = window.location.href.split('#')[0].split('?')[0];
+          naverLoginInstance = new window.naver.LoginWithNaverId({
+            clientId: NAVER_CLIENT_ID,
+            callbackUrl: currentUrl,
+            isPopup: true,
+            loginButton: { color: "green", type: 1, height: 40 }
+          });
+          naverLoginInstance.init();
+          checkNaverLoginCallback();
+        }
+      }
+    } catch (e) {
+      console.warn('Naver SDK init error:', e);
+    }
+  }
+
+  function checkNaverLoginCallback() {
+    try {
+      if (!naverLoginInstance) return;
+      if (window.location.hash.includes('access_token')) {
+        naverLoginInstance.getLoginStatus(function (status) {
+          if (status) {
+            const email = naverLoginInstance.user.getEmail() || `naver_user@naver.com`;
+            const name = naverLoginInstance.user.getName() || naverLoginInstance.user.getNickName() || '네이버 회원';
+            
+            if (window.opener) {
+              try {
+                window.opener.postMessage({
+                  type: 'NAVER_LOGIN_SUCCESS',
+                  name: name,
+                  email: email
+                }, '*');
+              } catch (e) {}
+              window.close();
+            } else {
+              completeOAuthSignIn('네이버(NAVER)', name, email, true);
+              if (history.replaceState) {
+                history.replaceState(null, document.title, window.location.pathname + window.location.search);
+              }
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('checkNaverLoginCallback error:', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('load', () => {
+      initNaverSDK();
+    });
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NAVER_LOGIN_SUCCESS') {
+        const { name, email } = event.data;
+        completeOAuthSignIn('네이버(NAVER)', name, email, true);
+      }
+    });
+  }
+
+  function handleRealNaverLogin() {
+    initNaverSDK();
+    const naverBtn = document.querySelector('#naverIdLogin a') || document.querySelector('#naverIdLogin_loginButton');
+    if (naverBtn) {
+      naverBtn.click();
+      return;
+    }
+
+    const callbackUrl = window.location.href.split('#')[0].split('?')[0];
+    const state = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('naver_oauth_state', state);
+    const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
+    window.open(authUrl, 'naverLoginPopup', 'width=520,height=650');
+  }
+
   let activeOAuth = {
     provider: 'Google',
     name: '구글 대표님',
@@ -3569,7 +3653,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
   const btnCircleNaver = document.getElementById('btn-circle-naver');
   if (btnCircleNaver) {
-    btnCircleNaver.addEventListener('click', () => openNativeOAuthSheet('네이버(NAVER)'));
+    btnCircleNaver.addEventListener('click', () => handleRealNaverLogin());
   }
   const btnCircleKakao = document.getElementById('btn-circle-kakao');
   if (btnCircleKakao) {
