@@ -3241,6 +3241,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       name: cleanName,
       brand: cleanBrand,
       email: cleanEmail,
+      marketingOptIn: false,
       provider: providerLabel,
       createdAt: new Date().toISOString()
     };
@@ -3254,7 +3255,8 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           provider: providerLabel,
           name: cleanName,
           brand: cleanBrand,
-          email: cleanEmail
+          email: cleanEmail,
+          marketingOptIn: false
         })
       });
       if (resp.ok) {
