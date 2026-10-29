@@ -241,6 +241,7 @@ const server = http.createServer(async (req, res) => {
       const name = (body.name || `${provider} 대표`).trim();
       const brand = (body.brand || '').trim();
       const email = (body.email || `${provider.toLowerCase()}_${Date.now()}@social.marketingmap.kr`).trim().toLowerCase();
+      const marketingOptIn = Boolean(body.marketingOptIn);
 
       const users = loadUsers();
       let user = users.find(u => u.email.toLowerCase() === email);
@@ -253,7 +254,7 @@ const server = http.createServer(async (req, res) => {
           brand,
           email,
           passwordHash: hashPassword(crypto.randomBytes(12).toString('hex')),
-          marketingOptIn: true,
+          marketingOptIn: marketingOptIn,
           provider,
           createdAt: now,
           lastLoginAt: now
