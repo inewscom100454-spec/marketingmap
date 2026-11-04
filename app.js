@@ -2638,7 +2638,8 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       createdAt: user.createdAt || new Date().toISOString(),
       marketingOptIn: Boolean(user.marketingOptIn),
       termsAgreedAt: user.termsAgreedAt || '',
-      marketingConsentAt: user.marketingConsentAt || ''
+      marketingConsentAt: user.marketingConsentAt || '',
+      emailVerified: typeof user.emailVerified === 'boolean' ? user.emailVerified : undefined
     }));
 
     // Auto-fill brand name in the marketing form if user registered a brand name
@@ -2684,6 +2685,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           <span class="account-profile-val">${escapeHtml(dateStr)}</span>
         </div>
       </div>
+      ${isEmailAccount && typeof profile.emailVerified === 'boolean' ? `
+      <div class="account-verify-row">
+        ${profile.emailVerified
+          ? '<span class="verify-ok">✓ 이메일 인증 완료</span>'
+          : '<span class="verify-warn">이메일 인증이 필요합니다</span><button type="button" class="btn-resend-verify" onclick="window.resendVerificationEmail()">인증 메일 보내기</button>'}
+      </div>` : ''}
       <div class="input-group" style="margin-bottom: 14px;">
         <label for="profile-brand-edit" style="font-size:12px; font-weight:700; color:#18181b;">내 비즈니스 상호명 (브랜드명) 관리</label>
         <div class="email-check-row" style="margin-top:4px;">
@@ -3197,6 +3204,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   if (tabLogin && tabRegister && loginForm) {
     tabLogin.addEventListener('click', () => {
       showAuthFeedback('');
+      hideResetUI();
       tabLogin.classList.add('active');
       tabRegister.classList.remove('active');
       loginForm.classList.add('active-form');
@@ -3209,6 +3217,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
     tabRegister.addEventListener('click', () => {
       showAuthFeedback('');
+      hideResetUI();
       tabRegister.classList.add('active');
       tabLogin.classList.remove('active');
       loginForm.classList.remove('active-form');
@@ -3352,7 +3361,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const resp = await fetch('/api/auth/check-email?email=' + encodeURIComponent(email));
       if (resp.ok) {
         const data = await resp.json();
-        available = Boolean(data.available) && available;
+        available = Boolean(data.available);
       }
     } catch (e) {
       // 정적 호스팅(서버 API 없음)일 때는 로컬 DB 결과만 사용
@@ -3449,6 +3458,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       };
 
       let registeredUser = null;
+      let verificationSent = false;
       let token = '';
 
       try {
@@ -3474,6 +3484,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           return;
         }
         registeredUser = { ...result.user, ...profileExtra };
+        verificationSent = Boolean(result.verificationSent);
         token = result.token || '';
       } catch (networkErr) {
         // 정적 호스팅(GitHub Pages 등)에서는 브라우저 로컬 저장소로 가입 처리
@@ -3492,7 +3503,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
       saveLocalUserRecord(registeredUser, passwordVal);
       setLoggedInSession(registeredUser, token);
-      showAuthFeedback(`🎉 환영합니다, <strong>${escapeHtml(registeredUser.name)}님</strong>! 회원가입이 완료되었습니다.`, 'success');
+      showAuthFeedback(`🎉 환영합니다, <strong>${escapeHtml(registeredUser.name)}님</strong>! 회원가입이 완료되었습니다.${verificationSent ? ' 인증 메일을 보냈으니 메일함을 확인해 주세요.' : ''}`, 'success');
 
       setTimeout(() => {
         if (btnSubmitReg) btnSubmitReg.disabled = false;
@@ -3502,10 +3513,187 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         refreshTermsState();
         if (emailCheckMsg) emailCheckMsg.style.display = 'none';
         closeLoginModal();
+        if (verificationSent) showToast('📧 인증 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.');
         triggerPendingAuthActions();
       }, 700);
     });
   }
+
+  // ---- 비밀번호 재설정 / 이메일 인증 안내 ----
+  const resetContainer = document.getElementById('password-reset-container');
+  const resetRequestPanel = document.getElementById('reset-request-panel');
+  const resetConfirmPanel = document.getElementById('reset-confirm-panel');
+  let resetToken = '';
+
+  function showToast(message) {
+    const el = document.createElement('div');
+    el.className = 'mm-toast';
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add('show'), 20);
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 6000);
+  }
+
+  function hideResetUI() {
+    if (resetContainer) {
+      resetContainer.classList.remove('active-form');
+      resetContainer.style.display = 'none';
+    }
+  }
+
+  function showResetPanel(which) {
+    showLoginModal('', 'login');
+    if (loginForm) {
+      loginForm.classList.remove('active-form');
+      loginForm.style.display = 'none';
+    }
+    if (resetContainer) {
+      resetContainer.classList.add('active-form');
+      resetContainer.style.display = 'block';
+    }
+    if (resetRequestPanel) resetRequestPanel.style.display = which === 'request' ? 'block' : 'none';
+    if (resetConfirmPanel) resetConfirmPanel.style.display = which === 'confirm' ? 'block' : 'none';
+  }
+
+  const linkForgotPassword = document.getElementById('link-forgot-password');
+  if (linkForgotPassword) {
+    linkForgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      const typed = (document.getElementById('login-email')?.value || '').trim();
+      showResetPanel('request');
+      const resetEmail = document.getElementById('reset-email');
+      if (resetEmail && typed) resetEmail.value = typed;
+    });
+  }
+  const btnResetBackLogin = document.getElementById('btn-reset-back-login');
+  if (btnResetBackLogin && tabLogin) btnResetBackLogin.addEventListener('click', () => tabLogin.click());
+
+  const resetRequestForm = document.getElementById('reset-request-form');
+  if (resetRequestForm) {
+    resetRequestForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthFeedback('');
+      const email = (document.getElementById('reset-email')?.value || '').trim();
+      if (!email || !email.includes('@')) { showAuthFeedback('올바른 이메일 주소를 입력해 주세요.', 'error'); return; }
+      const btn = document.getElementById('btn-reset-request');
+      if (btn) btn.disabled = true;
+      let data = null;
+      try {
+        const resp = await fetch('/api/auth/password-reset/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        data = await resp.json().catch(() => null);
+        if (resp.status === 429 && data) data.ok = false;
+      } catch (err) {
+        data = null;
+      }
+      if (data && typeof data.ok === 'boolean') {
+        showAuthFeedback((data.ok ? '✅ ' : '') + (data.message || ''), data.ok ? 'success' : 'error');
+      } else {
+        showAuthFeedback('현재 환경에서는 비밀번호 재설정 메일을 보낼 수 없습니다. 관리자에게 문의해 주세요.', 'error');
+      }
+      if (btn) btn.disabled = false;
+    });
+  }
+
+  const resetConfirmForm = document.getElementById('reset-confirm-form');
+  if (resetConfirmForm) {
+    resetConfirmForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthFeedback('');
+      const pw = document.getElementById('reset-new-password')?.value || '';
+      const pw2 = document.getElementById('reset-new-password-confirm')?.value || '';
+      if (pw.length < 6) { showAuthFeedback('비밀번호는 6자 이상 입력해 주세요.', 'error'); return; }
+      if (pw !== pw2) { showAuthFeedback('비밀번호와 비밀번호 확인이 일치하지 않습니다.', 'error'); return; }
+      const btn = document.getElementById('btn-reset-confirm');
+      if (btn) btn.disabled = true;
+      let data = null;
+      try {
+        const resp = await fetch('/api/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: resetToken, password: pw })
+        });
+        data = await resp.json().catch(() => null);
+      } catch (err) {
+        data = null;
+      }
+      if (btn) btn.disabled = false;
+      if (data && data.ok === true) {
+        resetToken = '';
+        resetConfirmForm.reset();
+        showLoginModal('', 'login');
+        showAuthFeedback('✅ ' + (data.message || '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.'), 'success');
+      } else {
+        showAuthFeedback((data && data.message) || '비밀번호를 변경하지 못했습니다. 다시 시도해 주세요.', 'error');
+      }
+    });
+  }
+
+  window.resendVerificationEmail = async function() {
+    try {
+      const resp = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('auth_token') || '') },
+        body: '{}'
+      });
+      const data = await resp.json().catch(() => null);
+      alert(data && data.message ? data.message : '현재 환경에서는 인증 메일을 보낼 수 없습니다.');
+      if (data && data.alreadyVerified) syncProfileFromServer();
+    } catch (err) {
+      alert('인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  };
+
+  // 서버에 저장된 최신 정보(이메일 인증 여부 등)로 로그인 정보를 갱신. 로그인이 무효화되었으면(비밀번호 변경 등) 로그아웃 처리
+  async function syncProfileFromServer() {
+    const token = localStorage.getItem('auth_token');
+    if (!token || localStorage.getItem('is_logged_in') !== 'true') return;
+    try {
+      const resp = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+      const data = await resp.json().catch(() => null);
+      if (!data || typeof data.ok !== 'boolean') return; // 서버 API 없음(정적 호스팅)
+      if (!data.ok) {
+        if (resp.status === 401) window.handleLogoutUser();
+        return;
+      }
+      const profile = getCurrentUserProfile();
+      const next = { ...profile, name: data.user.name, brand: data.user.brand || '', emailVerified: data.user.emailVerified, marketingOptIn: Boolean(data.user.marketingOptIn) };
+      localStorage.setItem('current_user_profile', JSON.stringify(next));
+      localStorage.setItem('user_name', next.name + '님');
+      localStorage.setItem('user_brand', next.brand);
+      checkLoginStatus();
+    } catch (err) {
+      // 네트워크 오류는 무시
+    }
+  }
+
+  // 메일 속 링크로 들어온 경우 처리: ?reset=토큰 (비밀번호 재설정), ?emailVerified=1|0 (이메일 인증 결과)
+  (function handleEmailLinks() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const resetParam = params.get('reset');
+      const verifiedParam = params.get('emailVerified');
+      if (resetParam) {
+        resetToken = resetParam;
+        showResetPanel('confirm');
+      }
+      if (verifiedParam !== null) {
+        showToast(verifiedParam === '1' ? '✅ 이메일 인증이 완료되었습니다.' : '인증 링크가 만료되었거나 이미 사용되었습니다. 로그인 후 내 계정에서 인증 메일을 다시 받아 주세요.');
+      }
+      if (resetParam || verifiedParam !== null) {
+        params.delete('reset');
+        params.delete('emailVerified');
+        const qs = params.toString();
+        history.replaceState(null, document.title, window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+      }
+    } catch (err) {
+      console.warn('email link handling error:', err);
+    }
+    syncProfileFromServer();
+  })();
 
   window.showLoginModal = showLoginModal;
   window.closeLoginModal = closeLoginModal;
@@ -3974,16 +4162,10 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           loggedInUser = data.user;
           token = data.token || '';
         } else {
-          // Check local DB in case user registered while offline/static
-          const localDb = getLocalUsersDb();
-          const localMatch = localDb.find(u => u.email.toLowerCase() === emailVal);
-          if (localMatch && localMatch.passwordHash === simpleHash(passwordVal)) {
-            loggedInUser = localMatch;
-          } else {
-            showAuthFeedback(data.message || '이메일 또는 비밀번호가 일치하지 않습니다.', 'error');
-            if (btnSubmitLogin) btnSubmitLogin.disabled = false;
-            return;
-          }
+          // 서버가 JSON으로 거절한 경우(비밀번호 오류·잠금·없는 계정)에는 브라우저에 남은 로컬 계정으로 로그인시키지 않는다
+          showAuthFeedback(data.message || '이메일 또는 비밀번호가 일치하지 않습니다.', 'error');
+          if (btnSubmitLogin) btnSubmitLogin.disabled = false;
+          return;
         }
       } catch (networkErr) {
         // Offline / static fallback verification
