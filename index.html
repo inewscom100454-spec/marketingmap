@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css?v=20261104_03">
+  <link rel="stylesheet" href="index.css?v=20261104_04">
 </head>
 <body>
   <!-- Background Glow Effects -->
@@ -1279,264 +1279,212 @@
           </p>
         </form>
 
-﻿        <!-- Register Flow Container (3-Step Path Matching User Attachments) -->
-        <div id=register-flow-container class=auth-form style=display: none;>
-          
-          <!-- STEP 1: 회원가입 방식 선택 화면 (첨부 1 완벽 일치) -->
-          <div id=signup-step-choice class=signup-step-panel>
-            <!-- 상단 로고 & 타이틀 -->
-            <div class=sc-header-bar>
-              <div class=sc-header-logo>
-                <svg viewBox=0 0 70 28 class=sc-logo-roof-svg>
-                  <path d=M5 22 L35 6 L65 22 fill=none stroke=#222 stroke-width=1.8 stroke-linecap=round stroke-linejoin=round/>
-                  <line x1=12 y1=24 x2=58 y2=24 stroke=#222 stroke-width=1.5 stroke-linecap=round/>
-                </svg>
-                <div class=sc-logo-text>사적인컬렉션</div>
-              </div>
-            </div>
+        <!-- Register Flow Container (3단계: 가입 방식 선택 → 약관 동의 → 정보 입력) -->
+        <div id="register-flow-container" class="auth-form" style="display: none;">
 
-            <div class=sc-page-title-box>
-              <h2 class=sc-page-title>회원가입</h2>
-              <div class=sc-heavy-line></div>
-            </div>
+          <!-- STEP 1: 가입 방식 선택 -->
+          <div id="signup-step-choice" class="signup-step-panel">
+            <div class="mm-step-indicator">STEP 1 / 3</div>
+            <h3 class="mm-step-title">어떻게 시작하시겠어요?</h3>
+            <p class="mm-step-desc">3초 만에 가입하고 업종 맞춤 AI 마케팅 전략을 무료로 받아보세요.</p>
 
-            <div class=sc-mid-logo-wrap>
-              <svg viewBox=0 0 70 28 class=sc-logo-roof-svg-sm>
-                <path d=M5 22 L35 6 L65 22 fill=none stroke=#222 stroke-width=1.8 stroke-linecap=round stroke-linejoin=round/>
-                <line x1=12 y1=24 x2=58 y2=24 stroke=#222 stroke-width=1.5 stroke-linecap=round/>
+            <button type="button" id="btn-choice-general" class="mm-btn-general">
+              이메일로 회원가입
+            </button>
+
+            <div class="mm-divider-text"><span>또는 소셜 계정으로 간편 가입</span></div>
+
+            <button type="button" id="btn-choice-kakao" class="mm-btn-sns mm-btn-kakao">
+              <svg class="mm-sns-icon" viewBox="0 0 24 24" fill="#191919">
+                <path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.75-.15.54-.96 3.47-1 3.63-.05.22.08.22.17.16.07-.05 2.79-1.89 3.92-2.66.72.1 1.46.12 2.23.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
               </svg>
-              <div class=sc-mid-logo-text>사적인컬렉션</div>
-            </div>
-
-            <!-- 일반 회원가입 버튼 (박스형) -->
-            <button type=button id=btn-choice-general class=sc-btn-general-signup>
-              일반 회원가입
+              <span>카카오로 시작하기</span>
             </button>
 
-            <div class=sc-thin-divider></div>
+            <button type="button" id="btn-choice-naver" class="mm-btn-sns mm-btn-naver">
+              <span class="mm-naver-n">N</span>
+              <span>네이버로 시작하기</span>
+            </button>
 
-            <div class=sc-sns-lead-title>다른 서비스 계정으로 회원가입하기</div>
-
-            <!-- 카카오 아이디 회원가입 (노란색) -->
-            <button type=button id=btn-choice-kakao class=sc-btn-sns sc-btn-kakao>
-              <svg class=sc-sns-icon viewBox=0 0 24 24 fill=#191919>
-                <path d=M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.75-.15.54-.96 3.47-1 3.63-.05.22.08.22.17.16.07-.05 2.79-1.89 3.92-2.66.72.1 1.46.12 2.23.12 5.52 0 10-3.58 10-8s-4.48-8-10-8z/>
+            <button type="button" id="btn-choice-google" class="mm-btn-sns mm-btn-google">
+              <svg class="mm-sns-icon" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.64l3.15-3.15C17.45 1.76 14.94 1 12 1 7.35 1 3.4 3.65 1.48 7.5l3.85 3C6.3 7.8 8.93 5.04 12 5.04z"/>
+                <path fill="#4285F4" d="M23.45 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.43c-.28 1.44-1.1 2.66-2.33 3.48l3.61 2.8c2.1-1.93 3.74-4.78 3.74-8.43z"/>
+                <path fill="#FBBC05" d="M5.33 14.5A7.16 7.16 0 0 1 4.96 12c0-.87.13-1.7.37-2.5L1.48 6.5A11.96 11.96 0 0 0 0 12c0 2 0 4 .5 5.5l4.83-3z"/>
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1 .67-2.28 1.07-4.36 1.07-3.07 0-5.7-2.76-6.67-5.46l-3.85 3C3.4 20.35 7.35 23 12 23z"/>
               </svg>
-              <span class=sc-sns-btn-text>카카오 아이디 회원가입</span>
+              <span>Google로 시작하기</span>
             </button>
 
-            <!-- 네이버 아이디 회원가입 (초록색) -->
-            <button type=button id=btn-choice-naver class=sc-btn-sns sc-btn-naver>
-              <span class=sc-naver-n-icon>N</span>
-              <span class=sc-sns-btn-text>네이버 아이디 회원가입</span>
-            </button>
-
-            <p class=sc-sns-notice-text>
-              SNS계정을 연동하여 빠르고 쉽고 안전하게 회원가입 할 수 있습니다.<br>
-              이 과정에서 고객님의 데이터는 철저하게 보호됩니다.
+            <p class="mm-sns-notice">
+              소셜 계정 연동 시 이름·이메일만 가져오며, 대표님의 비즈니스 데이터는 안전하게 보호됩니다.
             </p>
 
-            <p class=sc-bottom-login-guide>
-              이미 사적인컬렉션 회원이세요? <a href=#login id=link-goto-login-from-choice><strong>로그인</strong></a>
+            <p class="mm-bottom-guide">
+              이미 MarketingMap 회원이신가요? <a href="#login" id="link-goto-login-from-choice">로그인</a>
             </p>
           </div>
 
-          <!-- STEP 2: 서비스 이용약관 동의 화면 (첨부 4 완벽 일치) -->
-          <div id=signup-step-terms class=signup-step-panel style=display: none;>
-            <div class=sc-header-bar>
-              <div class=sc-header-logo>
-                <svg viewBox=0 0 70 28 class=sc-logo-roof-svg>
-                  <path d=M5 22 L35 6 L65 22 fill=none stroke=#222 stroke-width=1.8 stroke-linecap=round stroke-linejoin=round/>
-                  <line x1=12 y1=24 x2=58 y2=24 stroke=#222 stroke-width=1.5 stroke-linecap=round/>
-                </svg>
-                <div class=sc-logo-text>사적인컬렉션</div>
-              </div>
-            </div>
+          <!-- STEP 2: 이용약관 동의 -->
+          <div id="signup-step-terms" class="signup-step-panel" style="display: none;">
+            <div class="mm-step-indicator">STEP 2 / 3</div>
+            <h3 class="mm-step-title">서비스 이용약관</h3>
+            <p class="mm-step-desc">MarketingMap 이용을 위해 약관 동의가 필요합니다.</p>
 
-            <div class=sc-page-title-box>
-              <h2 class=sc-page-title>회원가입</h2>
-              <div class=sc-heavy-line></div>
-            </div>
-
-            <div class=sc-terms-lead-box>
-              <div class=sc-terms-brand>사적인 컬렉션</div>
-              <h3 class=sc-terms-title>서비스 이용약관</h3>
-            </div>
-
-            <div class=sc-terms-agreement-card>
-              <label class=sc-terms-item-all>
-                <input type=checkbox id=terms-all-check class=sc-checkbox-custom>
-                <span class=sc-terms-all-text>모두 동의 (선택 정보 포함)</span>
+            <div class="mm-terms-card">
+              <label class="mm-terms-all">
+                <input type="checkbox" id="terms-all-check">
+                <span>모두 동의 (선택 항목 포함)</span>
               </label>
+              <div class="mm-terms-line"></div>
 
-              <div class=sc-terms-mid-line></div>
-
-              <div class=sc-terms-item>
-                <label class=sc-terms-item-label>
-                  <input type=checkbox id=terms-age-check class=sc-terms-sub-check required>
-                  <span class=sc-terms-item-text>만 14세 이상입니다. (필수)</span>
+              <div class="mm-terms-row">
+                <label>
+                  <input type="checkbox" id="terms-age-check" class="mm-terms-sub">
+                  <span>[필수] 만 14세 이상 사업자 또는 개인입니다.</span>
                 </label>
               </div>
 
-              <div class=sc-terms-item>
-                <label class=sc-terms-item-label>
-                  <input type=checkbox id=terms-service-check class=sc-terms-sub-check required>
-                  <span class=sc-terms-item-text>서비스 이용약관에 동의 (필수)</span>
+              <div class="mm-terms-row">
+                <label>
+                  <input type="checkbox" id="terms-service-check" class="mm-terms-sub">
+                  <span>[필수] MarketingMap 서비스 이용약관 동의</span>
                 </label>
-                <button type=button class=sc-btn-terms-view onclick=window.toggleStepTerms('detail-terms-service')>보기</button>
+                <button type="button" class="mm-terms-view" onclick="window.toggleStepTerms('detail-terms-service')">보기</button>
               </div>
-              <div id=detail-terms-service class=sc-terms-detail-box hidden>
-                <strong>[사적인 컬렉션 서비스 이용약관]</strong><br>
-                제1조(목적) 본 약관은 사적인 컬렉션(이하 서비스)이 제공하는 아트 컬렉션, 전시 소식 및 비즈니스 솔루션의 이용 조건을 규정합니다.<br>
-                제2조(회원의 권리) 회원은 등록된 작품 감상, 큐레이션 및 서비스 기능을 이용할 수 있습니다.<br>
-                제3조(개인정보 보호) 회사는 회원의 소중한 개인정보를 안전하게 보호하며 관련 법령을 철저히 준수합니다.
+              <div id="detail-terms-service" class="mm-terms-detail hidden">
+                <strong>[MarketingMap 서비스 이용약관 요약]</strong><br>
+                제1조(목적) 본 약관은 MarketingMap Studio(이하 "서비스")가 제공하는 AI 마케팅 전략 설계, 채널별 홍보 원고 생성 및 보관함 서비스의 이용 조건을 규정합니다.<br>
+                제2조(저작권 및 활용 권리) 회원이 서비스를 통해 생성한 마케팅 전략서, 블로그 원고, 릴스 대본 등 모든 산출물의 상업적 활용 권리는 회원 본인에게 귀속됩니다.<br>
+                제3조(서비스 제공 및 변경) 회사는 기본 마케팅 엔진과 외부 AI API 연동 기능을 제공하며, 생성된 리포트는 회원의 보관함에 저장됩니다.
               </div>
 
-              <div class=sc-terms-item>
-                <label class=sc-terms-item-label>
-                  <input type=checkbox id=terms-privacy-check class=sc-terms-sub-check required>
-                  <span class=sc-terms-item-text>개인정보 수집 및 이용에 동의 (필수)</span>
+              <div class="mm-terms-row">
+                <label>
+                  <input type="checkbox" id="terms-privacy-check" class="mm-terms-sub">
+                  <span>[필수] 개인정보 수집 및 이용 동의</span>
                 </label>
-                <button type=button class=sc-btn-terms-view onclick=window.toggleStepTerms('detail-terms-privacy')>보기</button>
+                <button type="button" class="mm-terms-view" onclick="window.toggleStepTerms('detail-terms-privacy')">보기</button>
               </div>
-              <div id=detail-terms-privacy class=sc-terms-detail-box hidden>
+              <div id="detail-terms-privacy" class="mm-terms-detail hidden">
                 <strong>[개인정보 수집 및 이용 안내]</strong><br>
-                1. 수집 항목: 성명, 이메일(아이디), 휴대전화번호, 비밀번호, 성별, 생년월일, VIP 추천코드<br>
-                2. 수집 목적: 회원 가입 식별, 작품 소식 및 혜택 안내, 서비스 제공 및 민원 처리<br>
-                3. 보유 기간: 회원 탈퇴 시까지 안전하게 보관 후 지체 없이 파기합니다.
+                1. 수집 항목: 대표자 성함, 이메일, 비밀번호, 상호명, 휴대폰 번호(선택), 업종 및 마케팅 입력 정보<br>
+                2. 수집 목적: 회원 식별, 맞춤형 마케팅 전략 리포트 생성, 보관함 연동 및 고객 상담 지원<br>
+                3. 보유 기간: 회원 탈퇴 시까지 보유하며, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관 후 파기합니다.
               </div>
 
-              <div class=sc-terms-item>
-                <label class=sc-terms-item-label>
-                  <input type=checkbox id=terms-order-check class=sc-terms-sub-check>
-                  <span class=sc-terms-item-text>주문/결제 및 배송서비스 개인정보 수집 및 이용에 동의 (선택)</span>
+              <div class="mm-terms-row">
+                <label>
+                  <input type="checkbox" id="terms-marketing-check" class="mm-terms-sub">
+                  <span>[선택] 100일 홍보 캘린더 및 주간 업종별 마케팅 리포트 수신 동의</span>
                 </label>
-                <button type=button class=sc-btn-terms-view onclick=window.toggleStepTerms('detail-terms-order')>보기</button>
+                <button type="button" class="mm-terms-view" onclick="window.toggleStepTerms('detail-terms-marketing')">보기</button>
               </div>
-              <div id=detail-terms-order class=sc-terms-detail-box hidden>
-                <strong>[주문/결제 및 배송서비스 안내]</strong><br>
-                작품 주문, 전시 도록 발송 및 프리미엄 배송 서비스를 이용하기 위한 개인정보를 수집·이용합니다.
-              </div>
-
-              <div class=sc-terms-item>
-                <label class=sc-terms-item-label>
-                  <input type=checkbox id=terms-thirdparty-check class=sc-terms-sub-check>
-                  <span class=sc-terms-item-text>개인정보 제 3자 제공 (선택)</span>
-                </label>
-                <button type=button class=sc-btn-terms-view onclick=window.toggleStepTerms('detail-terms-thirdparty')>보기</button>
-              </div>
-              <div id=detail-terms-thirdparty class=sc-terms-detail-box hidden>
-                <strong>[개인정보 제3자 제공 동의]</strong><br>
-                제휴 갤러리 및 공인 배송 협력사에 작품 전달 목적으로 필요한 최소한의 정보를 제공합니다.
+              <div id="detail-terms-marketing" class="mm-terms-detail hidden">
+                <strong>[마케팅 정보 수신 안내]</strong><br>
+                업종별 실전 마케팅 비법 리포트, 신규 기능 및 이벤트 소식을 이메일/SMS로 발송합니다. 동의하지 않아도 서비스 이용에는 제한이 없으며, 언제든 수신 거부할 수 있습니다.
               </div>
             </div>
 
-            <!-- 하단 회원가입(다음 단계) 버튼 -->
-            <button type=button id=btn-terms-proceed class=sc-btn-terms-next disabled>
-              회원가입
-            </button>
+            <button type="button" id="btn-terms-proceed" class="mm-btn-next disabled">다음 단계로</button>
 
-            <div class=sc-step-back-row>
-              <button type=button class=sc-btn-back-link id=btn-back-to-step-choice>← 회원가입 방식 다시 선택</button>
+            <div class="mm-back-row">
+              <button type="button" class="mm-back-link" id="btn-back-to-step-choice">← 가입 방식 다시 선택</button>
             </div>
           </div>
 
-          <!-- STEP 3: 회원정보 및 부가정보 입력 화면 (첨부 5 완벽 일치) -->
-          <div id=signup-step-form class=signup-step-panel style=display: none;>
-            <form id=register-modal-form class=sc-register-form>
-              <div class=form-row-2col>
-                <div class=input-group>
-                  <label for=register-name>대표자 성함 <span class=required>*</span></label>
-                  <input type=text id=register-name placeholder=예: 홍길동 required>
+          <!-- STEP 3: 회원 정보 입력 -->
+          <div id="signup-step-form" class="signup-step-panel" style="display: none;">
+            <form id="register-modal-form" class="mm-register-form">
+              <div class="mm-step-indicator">STEP 3 / 3</div>
+              <h3 class="mm-step-title">회원 정보 입력</h3>
+
+              <div class="form-row-2col">
+                <div class="input-group">
+                  <label for="register-name">대표자 성함 <span class="required">*</span></label>
+                  <input type="text" id="register-name" placeholder="예: 홍길동" required>
                 </div>
-                <div class=input-group>
-                  <label for=register-brand>상호명 (브랜드명)</label>
-                  <input type=text id=register-brand placeholder=예: 사적인 갤러리>
+                <div class="input-group">
+                  <label for="register-brand">상호명 (브랜드명)</label>
+                  <input type="text" id="register-brand" placeholder="예: 오드리고깃집">
                 </div>
               </div>
 
-              <div class=input-group>
-                <label for=register-email>이메일 주소 (아이디) <span class=required>*</span></label>
-                <div class=email-check-row>
-                  <input type=email id=register-email placeholder=example@domain.com required>
-                  <button type=button id=btn-check-email class=btn-check-duplicate>중복확인</button>
+              <div class="input-group">
+                <label for="register-email">이메일 주소 (아이디) <span class="required">*</span></label>
+                <div class="email-check-row">
+                  <input type="email" id="register-email" placeholder="example@domain.com" required>
+                  <button type="button" id="btn-check-email" class="btn-check-duplicate">중복확인</button>
                 </div>
-                <div id=email-check-msg class=email-check-msg style=display: none;></div>
+                <div id="email-check-msg" class="email-check-msg" style="display: none;"></div>
               </div>
 
-              <div class=form-row-2col>
-                <div class=input-group>
-                  <label for=register-password>비밀번호 (6자 이상) <span class=required>*</span></label>
-                  <input type=password id=register-password placeholder=영문·숫자 6자 이상 required minlength=6>
+              <div class="form-row-2col">
+                <div class="input-group">
+                  <label for="register-password">비밀번호 (6자 이상) <span class="required">*</span></label>
+                  <input type="password" id="register-password" placeholder="영문·숫자 6자 이상" required minlength="6">
                 </div>
-                <div class=input-group>
-                  <label for=register-password-confirm>비밀번호 확인 <span class=required>*</span></label>
-                  <input type=password id=register-password-confirm placeholder=비밀번호 재입력 required minlength=6>
+                <div class="input-group">
+                  <label for="register-password-confirm">비밀번호 확인 <span class="required">*</span></label>
+                  <input type="password" id="register-password-confirm" placeholder="비밀번호 재입력" required minlength="6">
                 </div>
               </div>
 
-              <!-- 휴대폰 번호 입력칸 (첨부 5 상단) -->
-              <div class=input-group style=margin-top: 14px;>
-                <label for=register-phone>휴대폰 번호 <span class=required>*</span></label>
-                <input type=tel id=register-phone placeholder=- 없이 입력하세요. required class=sc-input-phone>
-                <label class=sc-sms-optin-label>
-                  <input type=checkbox id=register-sms-optin checked class=sc-checkbox-custom>
-                  <span>작가님 & 작품 소식, 특별 행사 안내를 SMS로 받겠습니다.</span>
+              <div class="input-group">
+                <label for="register-phone">휴대폰 번호 (선택)</label>
+                <input type="tel" id="register-phone" placeholder="- 없이 입력하세요.">
+                <label class="mm-sms-optin">
+                  <input type="checkbox" id="register-sms-optin">
+                  <span>마케팅 리포트와 이벤트 안내를 SMS로 받겠습니다.</span>
                 </label>
               </div>
 
-              <div class=sc-heavy-divider></div>
+              <div class="mm-extra">
+                <h4 class="mm-extra-title">부가 정보 <span class="mm-extra-sub">(선택 · 맞춤 전략 추천에 활용됩니다)</span></h4>
 
-              <!-- 부가 정보 헤더 (첨부 5) -->
-              <div class=sc-extra-info-section>
-                <h3 class=sc-extra-title>부가 정보</h3>
-                <div class=sc-extra-top-bar></div>
+                <div class="mm-strip">업종</div>
+                <select id="register-industry" class="mm-select">
+                  <option value="">업종을 선택하세요</option>
+                  <option value="food">외식 · 카페 · 베이커리</option>
+                  <option value="beauty">뷰티 · 네일 · 피부관리</option>
+                  <option value="shop">스마트스토어 · 쇼핑몰</option>
+                  <option value="class">교육 · 클래스 · 공방</option>
+                  <option value="health">병원 · 약국 · 헬스케어</option>
+                  <option value="service">서비스 · 전문직 · 프리랜서</option>
+                  <option value="etc">기타</option>
+                </select>
 
-                <!-- 성별 * (연한 회색 라벨 박스) -->
-                <div class=sc-strip-label>성별 *</div>
-                <div class=sc-gender-toggle-row>
-                  <button type=button class=sc-btn-gender active data-gender=M>남자</button>
-                  <button type=button class=sc-btn-gender data-gender=F>여자</button>
-                  <input type=hidden id=register-gender value=M>
+                <div class="mm-strip">성별</div>
+                <div class="mm-gender-row">
+                  <button type="button" class="mm-btn-gender" data-gender="M">남자</button>
+                  <button type="button" class="mm-btn-gender" data-gender="F">여자</button>
+                  <input type="hidden" id="register-gender" value="">
                 </div>
 
-                <!-- 생일 * (연한 회색 라벨 박스) -->
-                <div class=sc-strip-label>생일 *</div>
-                <div class=sc-birth-select-row>
-                  <select id=register-birth-type class=sc-select-birth>
-                    <option value=solar>선택</option>
-                    <option value=solar>양력</option>
-                    <option value=lunar>음력</option>
+                <div class="mm-strip">생년월일</div>
+                <div class="mm-birth-row">
+                  <select id="register-birth-type" class="mm-select">
+                    <option value="solar">양력</option>
+                    <option value="lunar">음력</option>
                   </select>
-                  <select id=register-birth-year class=sc-select-birth>
-                    <option value=">년</option>
- </select>
- <select id=register-birth-month class=sc-select-birth>
- <option value=>월</option>
- </select>
- <select id=register-birth-day class=sc-select-birth>
- <option value=>일</option>
- </select>
- </div>
+                  <select id="register-birth-year" class="mm-select"><option value="">년</option></select>
+                  <select id="register-birth-month" class="mm-select"><option value="">월</option></select>
+                  <select id="register-birth-day" class="mm-select"><option value="">일</option></select>
+                </div>
 
- <!-- VIP & 추천 코드 (연한 회색 라벨 박스) -->
- <div class=sc-strip-label>VIP & 추천 코드</div>
- <p class=sc-vip-desc>
- 아트페어, 갤러리 등에서 전달받은 추천/VIP 코드가 있다면 작성해주세요.
- </p>
- <input type=text id=register-vip-code class=sc-input-vip placeholder=>
- </div>
+                <div class="mm-strip">추천 코드</div>
+                <p class="mm-extra-help">세미나, 제휴 파트너 등에서 전달받은 추천 코드가 있다면 입력해 주세요.</p>
+                <input type="text" id="register-vip-code" class="mm-input" placeholder="추천 코드 (없으면 비워두세요)">
+              </div>
 
- <div class=sc-thin-divider style=margin-top: 24px; margin-bottom: 24px;></div>
+              <div class="mm-final-row">
+                <button type="button" id="btn-cancel-signup" class="mm-btn-cancel">이전</button>
+                <button type="submit" id="btn-submit-register" class="mm-btn-submit">무료 회원가입 완료</button>
+              </div>
+            </form>
+          </div>
+        </div>
 
- <!-- 하단 액션 버튼 그룹 (취소 / 회원가입) (첨부 5 하단 완벽 일치) -->
- <div class=sc-final-actions-row>
- <button type=button id=btn-cancel-signup class=sc-btn-action-cancel>취소</button>
- <button type=submit id=btn-submit-register class=sc-btn-action-submit>회원가입</button>
- </div>
- </form>
- </div>
- </div>
         <!-- Quick Social Sign-in Circle Buttons (Google, Naver, Kakao) -->
         <div class="auth-social-section">
           <div class="auth-divider">
@@ -1875,6 +1823,6 @@
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
-  <script src="app.js?v=20261104_03"></script>
+  <script src="app.js?v=20261104_04"></script>
 </body>
 </html>
