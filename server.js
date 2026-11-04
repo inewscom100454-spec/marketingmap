@@ -137,6 +137,11 @@ const server = http.createServer(async (req, res) => {
       const termsAge = Boolean(body.termsAge);
       const termsService = Boolean(body.termsService);
       const termsPrivacy = Boolean(body.termsPrivacy);
+        const phone = (body.phone || "").trim();
+        const gender = (body.gender || "M").trim();
+        const birth = (body.birth || "").trim();
+        const vipCode = (body.vipCode || "").trim();
+        const smsOptIn = Boolean(body.smsOptIn);
 
       if (!name) {
         return sendJson(res, 400, { ok: false, message: '대표자 성함을 입력해 주세요.' });
@@ -165,6 +170,11 @@ const server = http.createServer(async (req, res) => {
         email,
         passwordHash: hashPassword(password),
         marketingOptIn,
+          phone,
+          gender,
+          birth,
+          vipCode,
+          smsOptIn,
         provider: 'email',
         createdAt: now,
         lastLoginAt: now
