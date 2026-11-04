@@ -2795,19 +2795,27 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   window.claimMarketingOptInGift = async function() {
     let profile = getCurrentUserProfile();
     if (!profile) return;
+
+    try {
+      const resp = await fetch('/api/auth/profile/marketing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('auth_token') || '') },
+        body: JSON.stringify({ marketingOptIn: true })
+      });
+      if (resp.status === 401 || resp.status === 403) {
+        alert('로그인 정보가 만료되었습니다. 다시 로그인한 뒤 시도해 주세요.');
+        return;
+      }
+    } catch (e) {
+      // 서버 API가 없는 정적 호스팅에서는 브라우저에만 저장
+    }
+
     profile.marketingOptIn = true;
+    profile.marketingConsentAt = new Date().toISOString();
     localStorage.setItem('current_user_profile', JSON.stringify(profile));
 
     const banner = document.getElementById('marketing-gift-hook-banner');
     if (banner) banner.style.display = 'none';
-
-    try {
-      await fetch('/api/auth/profile/marketing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: profile.email, marketingOptIn: true })
-      });
-    } catch (e) {}
 
     alert('🎁 축하합니다! 100일 홍보 캘린더 원본(Excel/PDF)과 주간 마케팅 비법 리포트 무료 수신이 성공적으로 등록되었습니다.');
   };
@@ -3688,80 +3696,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     window.open(authUrl, 'naverLoginPopup', 'width=520,height=650');
   }
 
-  let activeOAuth = {
-    provider: 'Google',
-    name: '구글 대표님',
-    email: '내 Google 계정으로 연동'
-  };
-
-  const oauthOverlay = document.getElementById('social-oauth-overlay');
-  const oauthBackdrop = document.getElementById('oauth-sheet-backdrop');
-  const oauthAccountItem = document.getElementById('oauth-account-item');
-  const oauthBtnOther = document.getElementById('oauth-btn-other');
-  const oauthOtherBox = document.getElementById('oauth-other-input-box');
-  const btnOauthCustomContinue = document.getElementById('btn-oauth-custom-continue');
-
+  // 실제 소셜 인증(SDK)을 불러오지 못한 경우: 임의 계정으로 로그인시키지 않고 안내만 표시한다.
   function openNativeOAuthSheet(provider) {
-    activeOAuth.provider = provider;
-    if (oauthOtherBox) oauthOtherBox.style.display = 'none';
-
-    const pTitle = document.getElementById('oauth-provider-title');
-    const pSub = document.getElementById('oauth-provider-sub');
-    const pLegal = document.getElementById('oauth-provider-name-text');
-    const pName = document.getElementById('oauth-account-name');
-    const pEmail = document.getElementById('oauth-account-email');
-    const pAvatar = document.getElementById('oauth-account-avatar');
-    const pFallback = document.getElementById('oauth-avatar-fallback');
-
-    if (provider === 'Google') {
-      activeOAuth.name = '이영현';
-      activeOAuth.email = 'inewscom100454@gmail.com';
-      if (pTitle) pTitle.textContent = '계정 선택';
-      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
-      if (pLegal) pLegal.textContent = 'Google';
-      if (pAvatar) {
-        pAvatar.style.background = 'linear-gradient(135deg, #4285F4, #2563eb)';
-        pAvatar.style.color = '#ffffff';
-      }
-      if (pFallback) pFallback.textContent = '이';
-    } else if (provider === '네이버(NAVER)') {
-      activeOAuth.name = '이영현';
-      activeOAuth.email = 'inewscom100454@naver.com';
-      if (pTitle) pTitle.textContent = '네이버 계정 선택';
-      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
-      if (pLegal) pLegal.textContent = 'NAVER';
-      if (pAvatar) {
-        pAvatar.style.background = '#03C75A';
-        pAvatar.style.color = '#ffffff';
-      }
-      if (pFallback) pFallback.textContent = 'N';
-    } else if (provider === '카카오톡(Kakao)') {
-      activeOAuth.name = '이영현';
-      activeOAuth.email = 'inewscom100454@kakao.com';
-      if (pTitle) pTitle.textContent = '카카오 계정 선택';
-      if (pSub) pSub.textContent = 'MarketingMap 앱을 계속 이용하려면 계정을 선택하세요.';
-      if (pLegal) pLegal.textContent = 'Kakao';
-      if (pAvatar) {
-        pAvatar.style.background = '#FEE500';
-        pAvatar.style.color = '#191919';
-      }
-      if (pFallback) pFallback.textContent = '카';
-    }
-
-    if (pName) pName.textContent = activeOAuth.name;
-    if (pEmail) pEmail.textContent = activeOAuth.email;
-
-    if (mCheck) mCheck.checked = true;
-
-    if (oauthOverlay) oauthOverlay.classList.add('active');
-  }
-
-  function closeNativeOAuthSheet() {
-    if (oauthOverlay) oauthOverlay.classList.remove('active');
+    showAuthFeedback(`${provider} 로그인을 불러오지 못했습니다. 잠시 후 다시 시도하시거나 이메일로 가입해 주세요.`, 'error');
   }
 
   async function completeOAuthSignIn(provider, name, email) {
-    closeNativeOAuthSheet();
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanName = (name || '').trim();
 
@@ -3787,7 +3727,6 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
   // opts.termsAgreed: 약관 동의 완료 여부, opts.marketingOptIn: 마케팅 수신 동의(사용자가 직접 체크한 경우에만 true)
   async function finalizeOAuthSignIn(provider, name, email, opts = {}) {
-    closeNativeOAuthSheet();
     closeLoginModal();
 
     const consentAt = new Date().toISOString();
@@ -3838,37 +3777,6 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     triggerPendingAuthActions();
 
     showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!`, 'success');
-  }
-
-  if (oauthAccountItem) {
-    oauthAccountItem.addEventListener('click', () => {
-      completeOAuthSignIn(activeOAuth.provider, activeOAuth.name, activeOAuth.email);
-    });
-  }
-
-  if (oauthBackdrop) {
-    oauthBackdrop.addEventListener('click', closeNativeOAuthSheet);
-  }
-
-  if (oauthBtnOther && oauthOtherBox) {
-    oauthBtnOther.addEventListener('click', () => {
-      oauthOtherBox.style.display = oauthOtherBox.style.display === 'none' ? 'flex' : 'none';
-      if (oauthOtherBox.style.display === 'flex') {
-        document.getElementById('oauth-custom-name')?.focus();
-      }
-    });
-  }
-
-  if (btnOauthCustomContinue) {
-    btnOauthCustomContinue.addEventListener('click', () => {
-      const cName = (document.getElementById('oauth-custom-name')?.value || '').trim() || '대표';
-      const cEmail = (document.getElementById('oauth-custom-email')?.value || '').trim();
-      if (!cEmail || !cEmail.includes('@')) {
-        alert('올바른 이메일 주소를 입력해 주세요.');
-        return;
-      }
-      completeOAuthSignIn(activeOAuth.provider, cName, cEmail);
-    });
   }
 
   // Circular social buttons event binding
