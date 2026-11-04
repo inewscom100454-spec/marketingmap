@@ -17,6 +17,49 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml'
 };
 
+// --- Signed auth token (HMAC-SHA256). 비밀키는 환경변수 AUTH_SECRET 또는 .auth_secret 파일(서버 최초 실행 시 자동 생성) ---
+const AUTH_SECRET_PATH = path.join(__dirname, '.auth_secret');
+function loadAuthSecret() {
+  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
+  try {
+    return fs.readFileSync(AUTH_SECRET_PATH, 'utf8').trim();
+  } catch (e) {
+    const secret = crypto.randomBytes(32).toString('hex');
+    fs.writeFileSync(AUTH_SECRET_PATH, secret, { mode: 0o600 });
+    return secret;
+  }
+}
+const AUTH_SECRET = loadAuthSecret();
+const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function signToken(user) {
+  const payload = Buffer.from(JSON.stringify({ uid: user.id, email: user.email, exp: Date.now() + TOKEN_TTL_MS })).toString('base64url');
+  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  return payload + '.' + sig;
+}
+
+function verifyToken(token) {
+  if (typeof token !== 'string' || !token.includes('.')) return null;
+  const [payload, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  const a = Buffer.from(sig || '');
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!data.exp || data.exp < Date.now()) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getAuthUser(req) {
+  const header = req.headers['authorization'] || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  return verifyToken(token);
+}
+
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
   return `${salt}:${hash}`;
@@ -187,7 +230,7 @@ const server = http.createServer(async (req, res) => {
       users.push(newUser);
       saveUsers(users);
 
-      const token = Buffer.from(`${newUser.id}:${newUser.email}:${Date.now()}`).toString('base64');
+      const token = signToken(newUser);
       return sendJson(res, 201, {
         ok: true,
         message: `환영합니다, ${newUser.name}님! 회원가입이 완료되었습니다.`,
@@ -229,7 +272,7 @@ const server = http.createServer(async (req, res) => {
       user.lastLoginAt = new Date().toISOString();
       saveUsers(users);
 
-      const token = Buffer.from(`${user.id}:${user.email}:${Date.now()}`).toString('base64');
+      const token = signToken(user);
       return sendJson(res, 200, {
         ok: true,
         message: `${user.name}님, 환영합니다!`,
@@ -288,7 +331,7 @@ const server = http.createServer(async (req, res) => {
       }
       saveUsers(users);
 
-      const token = Buffer.from(`${user.id}:${user.email}:${Date.now()}`).toString('base64');
+      const token = signToken(user);
       return sendJson(res, 200, {
         ok: true,
         message: `${user.name}님, ${provider} 계정으로 시작합니다!`,
@@ -311,12 +354,19 @@ const server = http.createServer(async (req, res) => {
   // Update marketing opt-in
   if (reqPath === '/api/auth/profile/marketing' && req.method === 'POST') {
     try {
+      const authUser = getAuthUser(req);
+      if (!authUser) {
+        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
+      }
       const body = await parseRequestBody(req);
-      const email = (body.email || '').trim().toLowerCase();
+      const requestedEmail = (body.email || '').trim().toLowerCase();
+      if (requestedEmail && requestedEmail !== String(authUser.email).toLowerCase()) {
+        return sendJson(res, 403, { ok: false, message: '본인 계정의 수신 설정만 변경할 수 있습니다.' });
+      }
       const marketingOptIn = Boolean(body.marketingOptIn);
 
       const users = loadUsers();
-      const user = users.find(u => u.email.toLowerCase() === email);
+      const user = users.find(u => u.email.toLowerCase() === String(authUser.email).toLowerCase());
       if (user) {
         user.marketingOptIn = marketingOptIn;
         user.marketingConsentAt = marketingOptIn ? new Date().toISOString() : null;
@@ -332,7 +382,7 @@ const server = http.createServer(async (req, res) => {
   // --- STATIC FILE SERVING ---
   const relativePath = reqPath === '/' ? 'index.html' : reqPath.replace(/^\/+/, '');
   // Prevent access to users.json directly via static serving
-  if (relativePath.toLowerCase() === 'users.json') {
+  if (relativePath.toLowerCase() === 'users.json' || relativePath.split('/').some((seg) => seg.startsWith('.'))) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     return res.end('403 Forbidden');
   }
