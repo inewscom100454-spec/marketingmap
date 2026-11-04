@@ -6859,6 +6859,10 @@ body, p, h1, h2, h3, h4, h5, li, span, label, div, button {
 .mm-btn-next.disabled { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; cursor: not-allowed; }
 .mm-btn-next.active { background: var(--color-primary, #ff6b00); color: #fff; }
 .mm-back-row { text-align: center; margin-top: 12px; }
+.mm-social-banner {
+  background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 8px;
+  padding: 9px 12px; font-size: 12px; line-height: 1.5; margin: -6px 0 14px; word-break: break-all;
+}
 .mm-back-link { background: transparent; border: none; font-size: 12.5px; color: #6b7280; cursor: pointer; text-decoration: underline; }
 
 /* Step 3 */
