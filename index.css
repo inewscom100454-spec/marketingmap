@@ -6741,3 +6741,508 @@ body, p, h1, h2, h3, h4, h5, li, span, label, div, button {
 
 
 
+
+/* ==========================================================================
+   사적인 컬렉션 회원가입 경로 (첨부 5개 파일 100% 일치 프리미엄 UI)
+   ========================================================================== */
+
+.sc-header-bar {
+  background: #ECE8E1;
+  margin: -24px -24px 0 -24px;
+  padding: 14px 20px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sc-header-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sc-logo-roof-svg {
+  width: 54px;
+  height: 22px;
+}
+
+.sc-logo-roof-svg-sm {
+  width: 64px;
+  height: 26px;
+}
+
+.sc-logo-text {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #222222;
+}
+
+.sc-page-title-box {
+  margin-top: 26px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.sc-page-title {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  color: #111111;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+}
+
+.sc-heavy-line {
+  width: 100%;
+  height: 2.5px;
+  background-color: #111111;
+  margin: 0 auto;
+}
+
+.sc-mid-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 32px 0 28px 0;
+  gap: 3px;
+}
+
+.sc-mid-logo-text {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #222222;
+}
+
+.sc-btn-general-signup {
+  width: 100%;
+  height: 52px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #222222;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 28px;
+}
+
+.sc-btn-general-signup:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #111111;
+}
+
+.sc-thin-divider {
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb;
+  margin: 20px 0;
+}
+
+.sc-sns-lead-title {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.sc-btn-sns {
+  width: 100%;
+  height: 50px;
+  border-radius: 4px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+.sc-btn-sns:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.sc-btn-sns:active {
+  transform: translateY(0);
+}
+
+.sc-btn-kakao {
+  background-color: #FEE500;
+  color: #191919;
+}
+
+.sc-btn-naver {
+  background-color: #03C75A;
+  color: #ffffff;
+}
+
+.sc-sns-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sc-naver-n-icon {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffffff;
+  display: inline-block;
+  line-height: 1;
+}
+
+.sc-sns-notice-text {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #6b7280;
+  text-align: center;
+  margin: 22px 0 16px 0;
+}
+
+.sc-bottom-login-guide {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 13.5px;
+  color: #4b5563;
+  text-align: center;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.sc-bottom-login-guide a {
+  color: #111111;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+/* --- Step 2: 약관 동의 화면 (첨부 4) --- */
+.sc-terms-lead-box {
+  margin: 20px 0 16px 0;
+}
+
+.sc-terms-brand {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 2px;
+}
+
+.sc-terms-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111111;
+  margin: 0;
+}
+
+.sc-terms-agreement-card {
+  margin: 18px 0;
+}
+
+.sc-terms-item-all {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #111111;
+  padding: 6px 0;
+}
+
+.sc-terms-mid-line {
+  width: 100%;
+  height: 1.5px;
+  background-color: #111111;
+  margin: 10px 0 16px 0;
+}
+
+.sc-terms-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.sc-terms-item-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.sc-terms-item-text {
+  font-size: 13.5px;
+  color: #374151;
+}
+
+.sc-btn-terms-view {
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  color: #9ca3af;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.sc-btn-terms-view:hover {
+  color: #4b5563;
+}
+
+.sc-terms-detail-box {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 6px 0 10px 24px;
+}
+
+.sc-terms-detail-box.hidden {
+  display: none;
+}
+
+.sc-btn-terms-next {
+  width: 100%;
+  height: 50px;
+  border-radius: 4px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 18px;
+}
+
+.sc-btn-terms-next.disabled {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.sc-btn-terms-next.active {
+  background: #111111;
+  border: 1px solid #111111;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.sc-step-back-row {
+  text-align: center;
+  margin-top: 14px;
+}
+
+.sc-btn-back-link {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sc-btn-back-link:hover {
+  color: #111111;
+}
+
+/* --- Step 3: 회원정보 및 부가정보 (첨부 5) --- */
+.sc-input-phone {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sc-sms-optin-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #4b5563;
+  margin-top: 8px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.sc-heavy-divider {
+  width: 100%;
+  height: 1.5px;
+  background-color: #111111;
+  margin: 24px 0 20px 0;
+}
+
+.sc-extra-info-section {
+  margin-top: 16px;
+}
+
+.sc-extra-title {
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #111111;
+  margin: 0 0 8px 0;
+}
+
+.sc-extra-top-bar {
+  width: 100%;
+  height: 1.5px;
+  background-color: #111111;
+  margin-bottom: 14px;
+}
+
+.sc-strip-label {
+  background-color: #EFEFEF;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #222222;
+  border-radius: 2px;
+  margin: 14px 0 10px 0;
+}
+
+.sc-strip-label .required-star {
+  color: #ef4444;
+}
+
+.sc-gender-toggle-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sc-btn-gender {
+  flex: 1;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sc-btn-gender.active {
+  border: 1.8px solid #111111 !important;
+  color: #111111;
+  font-weight: 700;
+}
+
+.sc-birth-select-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sc-select-birth {
+  flex: 1;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 13.5px;
+  color: #374151;
+  padding: 0 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.sc-select-birth:focus {
+  border-color: #111111;
+  outline: none;
+}
+
+.sc-vip-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4b5563;
+  margin: 4px 0 8px 0;
+}
+
+.sc-input-vip {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  padding: 0 12px;
+  font-size: 13.5px;
+  color: #111111;
+  box-sizing: border-box;
+}
+
+.sc-input-vip:focus {
+  border-color: #111111;
+  outline: none;
+}
+
+.sc-final-actions-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.sc-btn-action-cancel {
+  flex: 1;
+  height: 48px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sc-btn-action-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #111111;
+}
+
+.sc-btn-action-submit {
+  flex: 1;
+  height: 48px;
+  background: #111111;
+  border: 1px solid #111111;
+  border-radius: 4px;
+  font-family: var(--font-sans), 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sc-btn-action-submit:hover {
+  background: #222222;
+}
+
+.sc-btn-action-submit:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
