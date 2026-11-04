@@ -2547,6 +2547,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       provider: userObj.provider || 'email',
       createdAt: userObj.createdAt || new Date().toISOString()
     };
+    ['termsAgreedAt', 'marketingOptIn', 'marketingConsentAt'].forEach((k) => {
+      if (userObj[k] !== undefined && userObj[k] !== '') record[k] = userObj[k];
+    });
     if (idx >= 0) {
       list[idx] = { ...list[idx], ...record };
     } else {
@@ -2640,7 +2643,10 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       brand: user.brand || '',
       email: user.email || '',
       provider: user.provider || 'email',
-      createdAt: user.createdAt || new Date().toISOString()
+      createdAt: user.createdAt || new Date().toISOString(),
+      marketingOptIn: Boolean(user.marketingOptIn),
+      termsAgreedAt: user.termsAgreedAt || '',
+      marketingConsentAt: user.marketingConsentAt || ''
     }));
 
     // Auto-fill brand name in the marketing form if user registered a brand name
@@ -3080,8 +3086,44 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   const emailCheckMsg = document.getElementById('email-check-msg');
   let lastCheckedEmail = '';
 
+  // 소셜 가입 대기 정보: 소셜 인증은 끝났지만 아직 우리 서비스 약관/마케팅 동의를 받지 못한 상태
+  let pendingSocial = null;
+  const socialBanner = document.getElementById('mm-social-banner');
+
+  function resetSocialGateUI() {
+    if (socialBanner) {
+      socialBanner.style.display = 'none';
+      socialBanner.textContent = '';
+    }
+    const nextBtn = document.getElementById('btn-terms-proceed');
+    if (nextBtn) nextBtn.textContent = '다음 단계로';
+    const backBtn = document.getElementById('btn-back-to-step-choice');
+    if (backBtn) backBtn.textContent = '← 가입 방식 다시 선택';
+  }
+
+  // 신규 소셜 가입자에게 약관·마케팅 동의 단계를 보여준다 (마케팅 동의는 기본 해제)
+  function openSocialConsentGate(profile) {
+    showLoginModal('', 'register');
+    termsSubChecks.forEach((c) => { c.checked = false; });
+    refreshTermsState();
+    pendingSocial = profile;
+    if (socialBanner) {
+      socialBanner.textContent = `${profile.provider} 계정(${profile.email})으로 가입을 계속합니다. 이름과 이메일만 가져오며, 아래 약관에 동의하시면 가입이 완료됩니다.`;
+      socialBanner.style.display = 'block';
+    }
+    const nextBtn = document.getElementById('btn-terms-proceed');
+    if (nextBtn) nextBtn.textContent = '동의하고 가입 완료';
+    const backBtn = document.getElementById('btn-back-to-step-choice');
+    if (backBtn) backBtn.textContent = '← 취소하고 가입 방식 다시 선택';
+    window.showSignupStep('terms');
+  }
+
   // 회원가입 단계 전환 (choice → terms → form)
   window.showSignupStep = function (stepName) {
+    if (stepName !== 'terms') {
+      pendingSocial = null;
+      resetSocialGateUI();
+    }
     const panels = {
       choice: document.getElementById('signup-step-choice'),
       terms: document.getElementById('signup-step-terms'),
@@ -3183,6 +3225,17 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         return;
       }
       showAuthFeedback('');
+      if (pendingSocial) {
+        // 소셜 가입: 약관 동의가 끝났으므로 가입 완료 처리 (마케팅은 체크한 경우에만 동의로 기록)
+        const profile = pendingSocial;
+        const marketingChecked = Boolean(termsMarketingCheck?.checked);
+        pendingSocial = null;
+        resetSocialGateUI();
+        termsSubChecks.forEach((c) => { c.checked = false; });
+        refreshTermsState();
+        finalizeOAuthSignIn(profile.provider, profile.name, profile.email, { termsAgreed: true, marketingOptIn: marketingChecked });
+        return;
+      }
       window.showSignupStep('form');
     });
   }
@@ -3329,13 +3382,17 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const btnSubmitReg = document.getElementById('btn-submit-register');
       if (btnSubmitReg) btnSubmitReg.disabled = true;
 
+      const consentAt = new Date().toISOString();
       const profileExtra = {
         phone: phoneVal,
         gender: genderVal,
         birth: birthVal,
         industry: industryVal,
         vipCode: vipCodeVal,
-        smsOptIn
+        smsOptIn,
+        termsAgreedAt: consentAt,
+        marketingOptIn,
+        marketingConsentAt: marketingOptIn ? consentAt : ''
       };
 
       let registeredUser = null;
@@ -3399,6 +3456,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
   window.showLoginModal = showLoginModal;
   window.closeLoginModal = closeLoginModal;
+  window.openSocialConsentGate = openSocialConsentGate;
 
   // --- Native Google / Naver / Kakao Account Chooser Sheet (Matches Rinnai Mobile Screen) ---
   const KAKAO_JS_KEY = '37cf83af5b8e6b8cd60edf673d87b631';
@@ -3439,7 +3497,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
               const profile = kakaoAccount.profile || {};
               const userName = profile.nickname || '카카오 회원';
               const userEmail = kakaoAccount.email || `kakao_${res.id}@marketingmap.kr`;
-              completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail, true);
+              completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail);
             },
             fail: function(error) {
               console.error(error);
@@ -3478,7 +3536,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       if (payload) {
         const userName = payload.name || '구글 회원';
         const userEmail = payload.email || `google_user@gmail.com`;
-        completeOAuthSignIn('Google', userName, userEmail, true);
+        completeOAuthSignIn('Google', userName, userEmail);
       }
     }
   }
@@ -3507,7 +3565,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
                     const userInfo = await res.json();
                     const userName = userInfo.name || '구글 회원';
                     const userEmail = userInfo.email || `google_${Date.now()}@gmail.com`;
-                    completeOAuthSignIn('Google', userName, userEmail, true);
+                    completeOAuthSignIn('Google', userName, userEmail);
                     return;
                   }
                 } catch (err) {
@@ -3589,7 +3647,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
               } catch (e) {}
               window.close();
             } else {
-              completeOAuthSignIn('네이버(NAVER)', name, email, true);
+              completeOAuthSignIn('네이버(NAVER)', name, email);
               if (history.replaceState) {
                 history.replaceState(null, document.title, window.location.pathname + window.location.search);
               }
@@ -3610,7 +3668,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'NAVER_LOGIN_SUCCESS') {
         const { name, email } = event.data;
-        completeOAuthSignIn('네이버(NAVER)', name, email, true);
+        completeOAuthSignIn('네이버(NAVER)', name, email);
       }
     });
   }
@@ -3693,7 +3751,6 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     if (pName) pName.textContent = activeOAuth.name;
     if (pEmail) pEmail.textContent = activeOAuth.email;
 
-    const mCheck = document.getElementById('oauth-terms-marketing');
     if (mCheck) mCheck.checked = true;
 
     if (oauthOverlay) oauthOverlay.classList.add('active');
@@ -3703,19 +3760,50 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     if (oauthOverlay) oauthOverlay.classList.remove('active');
   }
 
-  async function completeOAuthSignIn(provider, name, email, marketingOptIn) {
+  async function completeOAuthSignIn(provider, name, email) {
+    closeNativeOAuthSheet();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanName = (name || '').trim();
+
+    // 이미 가입된 회원이면 바로 로그인, 신규 회원이면 약관·마케팅 동의 단계를 먼저 거친다.
+    let isExistingMember = getLocalUsersDb().some((u) => u.email.toLowerCase() === cleanEmail);
+    if (!isExistingMember) {
+      try {
+        const resp = await fetch('/api/auth/check-email?email=' + encodeURIComponent(cleanEmail));
+        if (resp.ok) {
+          const data = await resp.json();
+          isExistingMember = data.available === false;
+        }
+      } catch (e) {
+        // 서버 API가 없는 정적 호스팅에서는 로컬 DB 결과만 사용
+      }
+    }
+
+    if (isExistingMember) {
+      return finalizeOAuthSignIn(provider, cleanName, cleanEmail, {});
+    }
+    openSocialConsentGate({ provider, name: cleanName, email: cleanEmail });
+  }
+
+  // opts.termsAgreed: 약관 동의 완료 여부, opts.marketingOptIn: 마케팅 수신 동의(사용자가 직접 체크한 경우에만 true)
+  async function finalizeOAuthSignIn(provider, name, email, opts = {}) {
     closeNativeOAuthSheet();
     closeLoginModal();
 
+    const consentAt = new Date().toISOString();
     let socialUser = {
       id: 'usr_oauth_' + Date.now(),
-      name: name.trim() || '이영현',
+      name: name || '회원',
       brand: '',
-      email: email.trim().toLowerCase(),
-      marketingOptIn: Boolean(marketingOptIn),
-      provider: provider,
-      createdAt: new Date().toISOString()
+      email,
+      provider,
+      createdAt: consentAt
     };
+    if (opts.termsAgreed) {
+      socialUser.termsAgreedAt = consentAt;
+      socialUser.marketingOptIn = Boolean(opts.marketingOptIn);
+      socialUser.marketingConsentAt = opts.marketingOptIn ? consentAt : '';
+    }
     let token = '';
 
     try {
@@ -3727,30 +3815,34 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
           name: socialUser.name,
           brand: '',
           email: socialUser.email,
-          marketingOptIn: Boolean(marketingOptIn)
+          termsAgreed: Boolean(opts.termsAgreed),
+          marketingOptIn: Boolean(opts.marketingOptIn)
         })
       });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.ok && data.user) {
-          socialUser = data.user;
-          token = data.token || '';
-        }
+      const data = await resp.json().catch(() => ({}));
+      if (resp.status === 400 && data.needsConsent) {
+        // 서버에 아직 없는 신규 회원 → 동의 단계부터 진행
+        openSocialConsentGate({ provider, name: socialUser.name, email: socialUser.email });
+        return;
       }
-    } catch (e) {}
+      if (resp.ok && data.ok && data.user) {
+        socialUser = { ...socialUser, ...data.user };
+        token = data.token || '';
+      }
+    } catch (e) {
+      // 정적 호스팅(서버 API 없음)에서는 로컬 가입으로 처리
+    }
 
     saveLocalUserRecord(socialUser);
     setLoggedInSession(socialUser, token);
     triggerPendingAuthActions();
 
-    const giftNotice = '';
-    showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!${giftNotice}`, 'success');
+    showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!`, 'success');
   }
 
   if (oauthAccountItem) {
     oauthAccountItem.addEventListener('click', () => {
-      const mCheck = document.getElementById('oauth-terms-marketing');
-      completeOAuthSignIn(activeOAuth.provider, activeOAuth.name, activeOAuth.email, mCheck ? mCheck.checked : true);
+      completeOAuthSignIn(activeOAuth.provider, activeOAuth.name, activeOAuth.email);
     });
   }
 
@@ -3775,8 +3867,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         alert('올바른 이메일 주소를 입력해 주세요.');
         return;
       }
-      const mCheck = document.getElementById('oauth-terms-marketing');
-      completeOAuthSignIn(activeOAuth.provider, cName, cEmail, mCheck ? mCheck.checked : true);
+      completeOAuthSignIn(activeOAuth.provider, cName, cEmail);
     });
   }
 
