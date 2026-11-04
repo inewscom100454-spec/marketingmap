@@ -3,8 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const PORT = 3000;
-const USERS_DB_PATH = path.join(__dirname, 'users.json');
+const PORT = Number(process.env.PORT) || 3000;
+const USERS_DB_PATH = process.env.USERS_DB_PATH || path.join(__dirname, 'users.json');
+
+// --- 소셜 로그인 서버 검증 설정 (클라이언트가 보낸 이메일/이름은 신뢰하지 않고, 제공사 API로 직접 확인한다) ---
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '922694159566-8t2dun8coqv923h9qvg1fd3hir4hkana.apps.googleusercontent.com';
+const GOOGLE_TOKENINFO_URL = process.env.GOOGLE_TOKENINFO_URL || 'https://oauth2.googleapis.com/tokeninfo';
+const GOOGLE_USERINFO_URL = process.env.GOOGLE_USERINFO_URL || 'https://www.googleapis.com/oauth2/v3/userinfo';
+const KAKAO_API_BASE = process.env.KAKAO_API_BASE || 'https://kapi.kakao.com';
+const KAKAO_APP_ID = process.env.KAKAO_APP_ID || ''; // 카카오 개발자 콘솔 > 앱 설정 > 앱 ID (설정 시 다른 앱에서 발급된 토큰 거부)
+const NAVER_API_BASE = process.env.NAVER_API_BASE || 'https://openapi.naver.com';
+const SOCIAL_PLACEHOLDER_DOMAIN = 'social.marketingmap.kr'; // 제공사가 이메일을 주지 않을 때 쓰는 내부용 주소 (이메일 가입에서는 사용 금지)
+const PROVIDER_LABELS = { kakao: '카카오톡(Kakao)', google: 'Google', naver: '네이버(NAVER)', email: '이메일' };
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -58,6 +68,109 @@ function getAuthUser(req) {
   const header = req.headers['authorization'] || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   return verifyToken(token);
+}
+
+// --- Social credential verification ---
+function authError(status, publicMessage) {
+  const err = new Error(publicMessage);
+  err.status = status;
+  err.publicMessage = publicMessage;
+  return err;
+}
+
+async function fetchProviderJson(url, headers = {}) {
+  let resp;
+  try {
+    resp = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+  } catch (e) {
+    throw authError(503, '소셜 인증 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+  }
+  if (!resp.ok) {
+    throw authError(401, '소셜 인증 정보가 유효하지 않거나 만료되었습니다. 다시 로그인해 주세요.');
+  }
+  try {
+    return await resp.json();
+  } catch (e) {
+    throw authError(502, '소셜 인증 응답을 해석하지 못했습니다.');
+  }
+}
+
+function normalizeProvider(label) {
+  const s = String(label || '').toLowerCase();
+  if (s.includes('kakao') || s.includes('카카오')) return 'kakao';
+  if (s.includes('google') || s.includes('구글')) return 'google';
+  if (s.includes('naver') || s.includes('네이버')) return 'naver';
+  return 'email';
+}
+
+// 반환: { providerKey, providerId, email, emailVerified, name }  (모두 제공사 응답에서 가져온 값)
+async function verifySocialCredential(body) {
+  const key = String(body.providerKey || '').toLowerCase();
+  const accessToken = typeof body.accessToken === 'string' ? body.accessToken.trim() : '';
+  const idToken = typeof body.idToken === 'string' ? body.idToken.trim() : '';
+
+  if (key === 'kakao') {
+    if (!accessToken) throw authError(401, '카카오 인증 정보가 없습니다. 다시 로그인해 주세요.');
+    const auth = { Authorization: 'Bearer ' + accessToken };
+    const me = await fetchProviderJson(KAKAO_API_BASE + '/v2/user/me', auth);
+    if (!me || !me.id) throw authError(401, '카카오 계정 정보를 확인하지 못했습니다.');
+    if (KAKAO_APP_ID) {
+      const info = await fetchProviderJson(KAKAO_API_BASE + '/v1/user/access_token_info', auth);
+      if (String(info.app_id) !== String(KAKAO_APP_ID)) {
+        throw authError(401, '이 서비스에서 발급된 카카오 인증 정보가 아닙니다.');
+      }
+    }
+    const acct = me.kakao_account || {};
+    const hasVerifiedEmail = Boolean(acct.email && acct.is_email_valid && acct.is_email_verified);
+    return {
+      providerKey: 'kakao',
+      providerId: String(me.id),
+      email: String(acct.email || ('kakao_' + me.id + '@' + SOCIAL_PLACEHOLDER_DOMAIN)).toLowerCase(),
+      emailVerified: hasVerifiedEmail,
+      name: (acct.profile && acct.profile.nickname) || (me.properties && me.properties.nickname) || '카카오 회원'
+    };
+  }
+
+  if (key === 'google') {
+    if (!accessToken && !idToken) throw authError(401, 'Google 인증 정보가 없습니다. 다시 로그인해 주세요.');
+    const query = idToken ? 'id_token=' + encodeURIComponent(idToken) : 'access_token=' + encodeURIComponent(accessToken);
+    const info = await fetchProviderJson(GOOGLE_TOKENINFO_URL + '?' + query);
+    if (info.aud !== GOOGLE_CLIENT_ID && info.azp !== GOOGLE_CLIENT_ID) {
+      throw authError(401, '이 서비스에서 발급된 Google 인증 정보가 아닙니다.');
+    }
+    if (!info.sub) throw authError(401, 'Google 계정 정보를 확인하지 못했습니다.');
+    if (!info.email) throw authError(401, 'Google 계정에서 이메일을 가져오지 못했습니다. 이메일 제공에 동의해 주세요.');
+    let name = info.name || '';
+    if (!name && accessToken) {
+      try {
+        const profile = await fetchProviderJson(GOOGLE_USERINFO_URL, { Authorization: 'Bearer ' + accessToken });
+        name = profile.name || '';
+      } catch (e) { /* 이름은 선택 정보 */ }
+    }
+    return {
+      providerKey: 'google',
+      providerId: String(info.sub),
+      email: String(info.email).toLowerCase(),
+      emailVerified: String(info.email_verified) === 'true',
+      name: name || '구글 회원'
+    };
+  }
+
+  if (key === 'naver') {
+    if (!accessToken) throw authError(401, '네이버 인증 정보가 없습니다. 다시 로그인해 주세요.');
+    const me = await fetchProviderJson(NAVER_API_BASE + '/v1/nid/me', { Authorization: 'Bearer ' + accessToken });
+    const r = me && me.response;
+    if (!me || me.resultcode !== '00' || !r || !r.id) throw authError(401, '네이버 계정 정보를 확인하지 못했습니다.');
+    return {
+      providerKey: 'naver',
+      providerId: String(r.id),
+      email: String(r.email || ('naver_' + r.id + '@' + SOCIAL_PLACEHOLDER_DOMAIN)).toLowerCase(),
+      emailVerified: false, // 네이버 연락처 이메일은 소유 확인이 보장되지 않으므로 이메일만으로 기존 계정과 연결하지 않는다
+      name: r.name || r.nickname || '네이버 회원'
+    };
+  }
+
+  throw authError(400, '지원하지 않는 소셜 로그인 방식입니다.');
 }
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -138,6 +251,8 @@ function parseRequestBody(req) {
   });
 }
 
+if (!KAKAO_APP_ID) console.warn('[보안] KAKAO_APP_ID가 설정되지 않았습니다. 다른 카카오 앱에서 발급된 토큰도 허용됩니다. (환경변수 KAKAO_APP_ID 설정 권장)');
+
 // Ensure initial users.json exists on startup
 loadUsers();
 
@@ -192,6 +307,9 @@ const server = http.createServer(async (req, res) => {
       }
       if (!email || !email.includes('@')) {
         return sendJson(res, 400, { ok: false, message: '유효한 이메일 주소를 입력해 주세요.' });
+      }
+      if (email.endsWith('@' + SOCIAL_PLACEHOLDER_DOMAIN)) {
+        return sendJson(res, 400, { ok: false, message: '사용할 수 없는 이메일 주소입니다.' });
       }
       if (password.length < 6) {
         return sendJson(res, 400, { ok: false, message: '비밀번호는 6자 이상 입력해 주세요.' });
@@ -295,46 +413,66 @@ const server = http.createServer(async (req, res) => {
   if (reqPath === '/api/auth/social' && req.method === 'POST') {
     try {
       const body = await parseRequestBody(req);
-      const provider = (body.provider || 'social').trim();
-      const name = (body.name || `${provider} 대표`).trim();
-      const brand = (body.brand || '').trim();
-      const email = (body.email || `${provider.toLowerCase()}_${Date.now()}@social.marketingmap.kr`).trim().toLowerCase();
-      const marketingOptIn = Boolean(body.marketingOptIn);
       const termsAgreed = Boolean(body.termsAgreed);
+      const marketingOptIn = Boolean(body.marketingOptIn);
+
+      // 이메일/이름은 클라이언트 입력이 아니라 제공사 API 응답으로만 결정한다
+      let identity;
+      try {
+        identity = await verifySocialCredential(body);
+      } catch (verifyErr) {
+        return sendJson(res, verifyErr.status || 401, { ok: false, message: verifyErr.publicMessage || '소셜 인증 정보를 확인하지 못했습니다.' });
+      }
 
       const users = loadUsers();
-      let user = users.find(u => u.email.toLowerCase() === email);
-      if (!user && !termsAgreed) {
-        return sendJson(res, 400, { ok: false, needsConsent: true, message: '서비스 이용약관과 개인정보 수집·이용에 동의해 주세요.' });
-      }
       const now = new Date().toISOString();
+      let user = users.find(u => u.providerKey === identity.providerKey && u.providerId === identity.providerId);
+
+      // 이전 버전에서 가입한 소셜 회원(providerId 없음)은, 제공사가 이메일 소유를 확인해 준 경우에만 연결한다
+      if (!user && identity.emailVerified) {
+        user = users.find(u => !u.providerId && u.email.toLowerCase() === identity.email && normalizeProvider(u.provider) === identity.providerKey);
+        if (user) {
+          user.providerKey = identity.providerKey;
+          user.providerId = identity.providerId;
+        }
+      }
 
       if (!user) {
+        // 같은 이메일로 이미 다른 방식(이메일 가입 등)으로 만든 계정이 있으면 자동 연결하지 않는다 (계정 선점 공격 방지)
+        const sameEmail = users.find(u => u.email.toLowerCase() === identity.email);
+        if (sameEmail) {
+          const existingLabel = PROVIDER_LABELS[normalizeProvider(sameEmail.provider)] || sameEmail.provider;
+          return sendJson(res, 409, { ok: false, message: '이 이메일은 이미 ' + existingLabel + ' 방식으로 가입되어 있습니다. 기존 방식으로 로그인해 주세요.' });
+        }
+        if (!termsAgreed) {
+          return sendJson(res, 400, { ok: false, needsConsent: true, message: '서비스 이용약관과 개인정보 수집·이용에 동의해 주세요.' });
+        }
         user = {
           id: 'usr_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex'),
-          name,
-          brand,
-          email,
+          name: identity.name,
+          brand: '',
+          email: identity.email,
           passwordHash: hashPassword(crypto.randomBytes(12).toString('hex')),
           marketingOptIn: marketingOptIn,
           termsAgreedAt: now,
           marketingConsentAt: marketingOptIn ? now : null,
-          provider,
+          provider: PROVIDER_LABELS[identity.providerKey],
+          providerKey: identity.providerKey,
+          providerId: identity.providerId,
           createdAt: now,
           lastLoginAt: now
         };
         users.push(user);
       } else {
-        if (name) user.name = name;
-        if (brand) user.brand = brand;
         user.lastLoginAt = now;
+        if (!user.name && identity.name) user.name = identity.name;
       }
       saveUsers(users);
 
       const token = signToken(user);
       return sendJson(res, 200, {
         ok: true,
-        message: `${user.name}님, ${provider} 계정으로 시작합니다!`,
+        message: `${user.name}님, ${user.provider} 계정으로 시작합니다!`,
         token,
         user: {
           id: user.id,
