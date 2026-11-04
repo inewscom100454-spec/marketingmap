@@ -6900,3 +6900,13 @@ body, p, h1, h2, h3, h4, h5, li, span, label, div, button {
 /* 회원가입 탭에서는 하단 원형 소셜 영역 숨김(1단계에 소셜 버튼 포함) */
 #register-flow-container.active-form ~ .auth-social-section { display: none; }
 #register-flow-container { max-height: 70vh; overflow-y: auto; padding-right: 2px; }
+
+/* 회원 탈퇴 */
+.btn-withdraw-link { background: transparent; border: none; color: #9ca3af; font-size: 12px; text-decoration: underline; cursor: pointer; padding: 4px 8px; }
+.btn-withdraw-link:hover { color: #ef4444; }
+.withdraw-box { margin-top: 10px; padding: 12px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 10px; }
+.withdraw-box p { margin: 0 0 8px; font-size: 12px; color: #991b1b; line-height: 1.5; }
+.withdraw-box input { width: 100%; box-sizing: border-box; height: 38px; margin-bottom: 8px; border: 1px solid #fca5a5; border-radius: 8px; padding: 0 10px; font-size: 13px; }
+.withdraw-msg { color: #b91c1c; font-size: 12px; margin-bottom: 8px; }
+.btn-withdraw-confirm { width: 100%; height: 40px; background: #dc2626; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn-withdraw-confirm:hover { background: #b91c1c; }
