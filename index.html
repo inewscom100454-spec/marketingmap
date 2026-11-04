@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css?v=20261104_07">
+  <link rel="stylesheet" href="index.css?v=20261104_08">
 </head>
 <body>
   <!-- Background Glow Effects -->
@@ -1259,17 +1259,16 @@
         <form id="login-modal-form" class="auth-form active-form">
           <div class="input-group">
             <label for="login-email">이메일 주소</label>
-            <input type="email" id="login-email" placeholder="가입하신 이메일 또는 데모 계정" required value="ceo@marketingmap.kr">
+            <input type="email" id="login-email" placeholder="가입하신 이메일 주소" required autocomplete="email">
           </div>
           <div class="input-group">
             <label for="login-password">비밀번호</label>
-            <input type="password" id="login-password" placeholder="••••••••" required value="123456">
+            <input type="password" id="login-password" placeholder="비밀번호" required autocomplete="current-password">
           </div>
           <div class="login-helper-row">
             <label class="remember-me-label">
               <input type="checkbox" id="login-remember" checked> 로그인 상태 유지
             </label>
-            <span class="demo-account-badge">데모 계정 자동 입력됨 (ceo@marketingmap.kr)</span>
           </div>
           <button type="submit" id="btn-submit-login" class="btn-primary-action">
             <span>MarketingMap 로그인하기</span>
@@ -1403,7 +1402,7 @@
               <div class="form-row-2col">
                 <div class="input-group">
                   <label for="register-name">대표자 성함 <span class="required">*</span></label>
-                  <input type="text" id="register-name" placeholder="예: 홍길동" required>
+                  <input type="text" id="register-name" placeholder="예: 홍길동" required autocomplete="name">
                 </div>
                 <div class="input-group">
                   <label for="register-brand">상호명 (브랜드명)</label>
@@ -1414,7 +1413,7 @@
               <div class="input-group">
                 <label for="register-email">이메일 주소 (아이디) <span class="required">*</span></label>
                 <div class="email-check-row">
-                  <input type="email" id="register-email" placeholder="example@domain.com" required>
+                  <input type="email" id="register-email" placeholder="example@domain.com" required autocomplete="email">
                   <button type="button" id="btn-check-email" class="btn-check-duplicate">중복확인</button>
                 </div>
                 <div id="email-check-msg" class="email-check-msg" style="display: none;"></div>
@@ -1423,17 +1422,17 @@
               <div class="form-row-2col">
                 <div class="input-group">
                   <label for="register-password">비밀번호 (6자 이상) <span class="required">*</span></label>
-                  <input type="password" id="register-password" placeholder="영문·숫자 6자 이상" required minlength="6">
+                  <input type="password" id="register-password" placeholder="영문·숫자 6자 이상" required minlength="6" autocomplete="new-password">
                 </div>
                 <div class="input-group">
                   <label for="register-password-confirm">비밀번호 확인 <span class="required">*</span></label>
-                  <input type="password" id="register-password-confirm" placeholder="비밀번호 재입력" required minlength="6">
+                  <input type="password" id="register-password-confirm" placeholder="비밀번호 재입력" required minlength="6" autocomplete="new-password">
                 </div>
               </div>
 
               <div class="input-group">
                 <label for="register-phone">휴대폰 번호 (선택)</label>
-                <input type="tel" id="register-phone" placeholder="- 없이 입력하세요.">
+                <input type="tel" id="register-phone" placeholder="- 없이 입력하세요." autocomplete="tel">
                 <label class="mm-sms-optin">
                   <input type="checkbox" id="register-sms-optin">
                   <span>마케팅 리포트와 이벤트 안내를 SMS로 받겠습니다.</span>
@@ -1779,6 +1778,6 @@
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
-  <script src="app.js?v=20261104_07"></script>
+  <script src="app.js?v=20261104_08"></script>
 </body>
 </html>
