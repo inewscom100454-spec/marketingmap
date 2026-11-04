@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css?v=20261104_02">
+  <link rel="stylesheet" href="index.css?v=20261104_03">
 </head>
 <body>
   <!-- Background Glow Effects -->
@@ -48,9 +48,9 @@
         <a href="#support" id="nav-support" class="nav-link">고객센터</a>
         <span class="nav-divider">|</span>
         <div id="auth-nav-container" class="auth-nav-container">
-          <a href="#login" id="nav-login" class="nav-link">로그인</a>
+          <a href="#login" id="nav-login" class="nav-link" onclick="window.showLoginModal('', 'login'); return false;">로그인</a>
           <span class="nav-divider">|</span>
-          <a href="#register" id="nav-register" class="nav-link nav-link-highlight">회원가입</a>
+          <a href="#register" id="nav-register" class="nav-link nav-link-highlight" onclick="window.showLoginModal('', 'register'); return false;">회원가입</a>
         </div>
       </nav>
 
@@ -1875,6 +1875,6 @@
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
-  <script src="app.js?v=20261104_02"></script>
+  <script src="app.js?v=20261104_03"></script>
 </body>
 </html>
