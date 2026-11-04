@@ -3,6 +3,22 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// --- .env 로더 (외부 패키지 없음): KEY=VALUE 형식. 이미 설정된 환경변수는 덮어쓰지 않는다. (.env 는 웹으로 제공되지 않음) ---
+(function loadEnvFile() {
+  try {
+    const envPath = process.env.ENV_FILE || path.join(__dirname, '.env');
+    if (!fs.existsSync(envPath)) return;
+    fs.readFileSync(envPath, 'utf8').split(/\r?\n/).forEach((line) => {
+      const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+      if (!m || line.trim().startsWith('#')) return;
+      const value = m[2].replace(/^(['"])(.*)\1$/, '$2');
+      if (process.env[m[1]] === undefined) process.env[m[1]] = value;
+    });
+  } catch (e) {
+    console.warn('[경고] .env 파일을 읽지 못했습니다:', e.message);
+  }
+})();
+
 const PORT = Number(process.env.PORT) || 3000;
 const USERS_DB_PATH = process.env.USERS_DB_PATH || path.join(__dirname, 'users.json');
 
@@ -185,61 +201,170 @@ function verifyPassword(password, storedHash) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(originalHash, 'hex'));
 }
 
-function loadUsers() {
+const USERS_BAK_PATH = USERS_DB_PATH + '.bak';
+
+// 임시 파일에 쓴 뒤 교체(rename)하여, 쓰는 도중 중단되어도 기존 파일이 깨지지 않게 한다
+function writeFileAtomic(filePath, data) {
+  const tmpPath = filePath + '.tmp';
+  fs.writeFileSync(tmpPath, data, { encoding: 'utf-8', mode: 0o600 });
+  fs.renameSync(tmpPath, filePath);
+}
+
+function readUsersFile(filePath) {
+  const parsed = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  if (!Array.isArray(parsed)) throw new Error('회원 파일 형식이 올바르지 않습니다(배열이 아님)');
+  return parsed;
+}
+
+function restoreUsersFromBackup(reason) {
+  if (!fs.existsSync(USERS_BAK_PATH)) return null;
   try {
-    if (!fs.existsSync(USERS_DB_PATH)) {
-      const demoUser = {
-        id: 'usr_demo_ceo',
-        name: '오드리 대표',
-        brand: '오드리고깃집',
-        email: 'ceo@marketingmap.kr',
-        passwordHash: hashPassword('123456'),
-        marketingOptIn: true,
-        provider: 'email',
-        createdAt: '2026-10-28T00:00:00.000Z',
-        lastLoginAt: '2026-10-28T00:00:00.000Z'
-      };
-      fs.writeFileSync(USERS_DB_PATH, JSON.stringify([demoUser], null, 2), 'utf-8');
-      return [demoUser];
-    }
-    const raw = fs.readFileSync(USERS_DB_PATH, 'utf-8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Failed to read users.json:', err);
-    return [];
+    const users = readUsersFile(USERS_BAK_PATH);
+    writeFileAtomic(USERS_DB_PATH, JSON.stringify(users, null, 2));
+    console.warn('[복구] ' + reason + ' → 백업(' + path.basename(USERS_BAK_PATH) + ')에서 회원 ' + users.length + '명을 복구했습니다.');
+    return users;
+  } catch (e) {
+    console.error('[치명] 백업 파일도 읽을 수 없습니다:', e.message);
+    return null;
   }
 }
 
-function saveUsers(users) {
+// 손상된 파일을 빈 목록으로 간주해 덮어쓰지 않는다: 백업 복구에 실패하면 예외를 던져 서버가 멈추게 한다
+function loadUsers() {
+  if (!fs.existsSync(USERS_DB_PATH)) {
+    const restored = restoreUsersFromBackup('회원 파일이 없음');
+    if (restored) return restored;
+    writeFileAtomic(USERS_DB_PATH, '[]');
+    return [];
+  }
   try {
-    fs.writeFileSync(USERS_DB_PATH, JSON.stringify(users, null, 2), 'utf-8');
+    return readUsersFile(USERS_DB_PATH);
   } catch (err) {
-    console.error('Failed to write users.json:', err);
+    console.error('[치명] 회원 파일을 읽을 수 없습니다:', err.message);
+    const corruptCopy = USERS_DB_PATH.replace(/\.json$/, '') + '.corrupt-' + Date.now() + '.json';
+    try {
+      fs.copyFileSync(USERS_DB_PATH, corruptCopy);
+      console.error('[보존] 손상된 파일을 ' + path.basename(corruptCopy) + ' 로 보관했습니다.');
+    } catch (copyErr) { /* 보관 실패는 무시 */ }
+    const restored = restoreUsersFromBackup('회원 파일 손상');
+    if (restored) return restored;
+    const fatal = new Error('USERS_DB_UNREADABLE');
+    fatal.code = 'USERS_DB_UNREADABLE';
+    throw fatal;
+  }
+}
+
+// 저장 실패 시 예외를 던진다 (실패했는데 성공으로 응답하는 일이 없도록)
+function saveUsers(users) {
+  if (!Array.isArray(users)) throw new Error('saveUsers: 배열이 아닙니다');
+  if (fs.existsSync(USERS_DB_PATH)) {
+    try {
+      fs.copyFileSync(USERS_DB_PATH, USERS_BAK_PATH);
+    } catch (e) {
+      console.error('[경고] 회원 파일 백업 실패:', e.message);
+    }
+  }
+  writeFileAtomic(USERS_DB_PATH, JSON.stringify(users, null, 2));
+}
+
+// --- 보안 헬퍼: 클라이언트 IP, 요청 제한(rate limit), CORS, 보안 헤더 ---
+const RATE_SCALE = Number(process.env.RATE_LIMIT_SCALE) || 1; // 테스트용 배율
+const rateBuckets = new Map();
+const failureBuckets = new Map();
+
+function pruneBucket(list, windowMs, now) {
+  while (list.length && list[0] <= now - windowMs) list.shift();
+  return list;
+}
+
+function rateLimit(key, limit, windowMs) {
+  const now = Date.now();
+  const list = pruneBucket(rateBuckets.get(key) || [], windowMs, now);
+  if (list.length >= limit * RATE_SCALE) {
+    rateBuckets.set(key, list);
+    return { ok: false, retryAfter: Math.max(1, Math.ceil((list[0] + windowMs - now) / 1000)) };
+  }
+  list.push(now);
+  rateBuckets.set(key, list);
+  return { ok: true, retryAfter: 0 };
+}
+
+function failureCount(key, windowMs) {
+  const list = pruneBucket(failureBuckets.get(key) || [], windowMs, Date.now());
+  failureBuckets.set(key, list);
+  return list.length;
+}
+function recordFailure(key) {
+  const list = failureBuckets.get(key) || [];
+  list.push(Date.now());
+  failureBuckets.set(key, list);
+}
+function clearFailures(key) {
+  failureBuckets.delete(key);
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, list] of rateBuckets) { pruneBucket(list, 3600 * 1000, now); if (!list.length) rateBuckets.delete(k); }
+  for (const [k, list] of failureBuckets) { pruneBucket(list, 3600 * 1000, now); if (!list.length) failureBuckets.delete(k); }
+}, 10 * 60 * 1000).unref();
+
+// 프록시(Cloudflare 터널 등) 뒤에서는 로컬호스트로 접속하므로, 로컬 연결일 때만 전달 헤더의 실제 IP를 사용한다
+function clientIp(req) {
+  const remote = (req.socket && req.socket.remoteAddress) || '';
+  const isLoopback = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+  if (isLoopback) {
+    const forwarded = req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    if (forwarded) return String(forwarded);
+  }
+  return remote || 'unknown';
+}
+
+const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+function allowedCorsOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  try {
+    if (new URL(origin).host === req.headers.host) return origin; // 같은 출처
+  } catch (e) { /* 잘못된 Origin */ }
+  return '';
+}
+
+function applySecurityHeaders(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (String(req.url || '').startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
+  const corsOrigin = allowedCorsOrigin(req);
+  if (corsOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+    res.setHeader('Vary', 'Origin');
   }
 }
 
 function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-  });
+  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload), 'utf-8');
 }
 
+const MAX_BODY_BYTES = 100 * 1024;
 function parseRequestBody(req) {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-      if (body.length > 1e6) {
-        req.connection.destroy();
+    const chunks = [];
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
         reject(new Error('Payload too large'));
+        req.destroy();
+        return;
       }
+      chunks.push(chunk);
     });
     req.on('end', () => {
+      const body = Buffer.concat(chunks).toString('utf-8');
       if (!body) return resolve({});
       try {
         resolve(JSON.parse(body));
@@ -253,21 +378,46 @@ function parseRequestBody(req) {
 
 if (!KAKAO_APP_ID) console.warn('[보안] KAKAO_APP_ID가 설정되지 않았습니다. 다른 카카오 앱에서 발급된 토큰도 허용됩니다. (환경변수 KAKAO_APP_ID 설정 권장)');
 
-// Ensure initial users.json exists on startup
-loadUsers();
+// 시작 시 회원 DB 검사: 손상되었고 복구도 불가능하면 빈 목록으로 덮어쓰지 않고 서버를 중단한다
+try {
+  loadUsers();
+} catch (e) {
+  console.error('\n[치명] 회원 데이터를 불러올 수 없어 서버를 시작하지 않습니다.');
+  console.error('       손상된 users 파일과 .bak 백업을 확인해 주세요. (손상 파일은 users.corrupt-*.json 으로 보관됨)\n');
+  process.exit(1);
+}
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[오류] 처리되지 않은 비동기 오류:', reason);
+});
 
 const server = http.createServer(async (req, res) => {
+  applySecurityHeaders(req, res);
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '600'
     });
     return res.end();
   }
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const reqPath = parsedUrl.pathname;
+  const ip = clientIp(req);
+  const limited = (key, limit, windowMs) => {
+    const r = rateLimit(key, limit, windowMs);
+    if (r.ok) return false;
+    res.setHeader('Retry-After', String(r.retryAfter));
+    sendJson(res, 429, { ok: false, message: `요청이 너무 많습니다. ${r.retryAfter}초 후 다시 시도해 주세요.` });
+    return true;
+  };
+  if (reqPath === '/api/auth/check-email' && req.method === 'GET' && limited('chk:' + ip, 30, 60 * 1000)) return;
+  if (reqPath === '/api/auth/register' && req.method === 'POST' && limited('reg:' + ip, 10, 60 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/login' && req.method === 'POST' && limited('login:' + ip, 40, 15 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/social' && req.method === 'POST' && limited('soc:' + ip, 30, 10 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/account/delete' && req.method === 'POST' && limited('del:' + ip, 10, 15 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/profile/marketing' && req.method === 'POST' && limited('mkt:' + ip, 30, 10 * 60 * 1000)) return;
 
   // --- AUTHENTICATION API ENDPOINTS ---
   if (reqPath === '/api/auth/check-email' && req.method === 'GET') {
@@ -377,16 +527,25 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { ok: false, message: '이메일과 비밀번호를 모두 입력해 주세요.' });
       }
 
+      const failKey = 'login:' + ip + '|' + email;
+      if (failureCount(failKey, 15 * 60 * 1000) >= 8 * RATE_SCALE) {
+        res.setHeader('Retry-After', '900');
+        return sendJson(res, 429, { ok: false, message: '로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.' });
+      }
+
       const users = loadUsers();
       const user = users.find(u => u.email.toLowerCase() === email);
       if (!user) {
+        recordFailure(failKey);
         return sendJson(res, 401, { ok: false, message: '가입되지 않은 이메일입니다. 먼저 무료 회원가입을 진행해 주세요.' });
       }
 
       if (!verifyPassword(password, user.passwordHash)) {
+        recordFailure(failKey);
         return sendJson(res, 401, { ok: false, message: '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.' });
       }
 
+      clearFailures(failKey);
       user.lastLoginAt = new Date().toISOString();
       saveUsers(users);
 
@@ -517,15 +676,54 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // 회원 탈퇴: 로그인 토큰 필수, 이메일 가입 회원은 비밀번호 재확인. 계정 정보는 즉시 삭제된다.
+  if (reqPath === '/api/auth/account/delete' && req.method === 'POST') {
+    try {
+      const authUser = getAuthUser(req);
+      if (!authUser) {
+        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
+      }
+      const body = await parseRequestBody(req);
+      const users = loadUsers();
+      const idx = users.findIndex(u => u.id === authUser.uid && u.email.toLowerCase() === String(authUser.email).toLowerCase());
+      if (idx < 0) {
+        return sendJson(res, 404, { ok: false, message: '이미 탈퇴했거나 존재하지 않는 계정입니다.' });
+      }
+      const user = users[idx];
+      if (normalizeProvider(user.provider) === 'email') {
+        const failKey = 'del:' + ip + '|' + user.email.toLowerCase();
+        if (failureCount(failKey, 15 * 60 * 1000) >= 5 * RATE_SCALE) {
+          return sendJson(res, 429, { ok: false, message: '비밀번호 확인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.' });
+        }
+        if (!verifyPassword(String(body.password || ''), user.passwordHash)) {
+          recordFailure(failKey);
+          return sendJson(res, 401, { ok: false, message: '비밀번호가 일치하지 않습니다.' });
+        }
+        clearFailures(failKey);
+      }
+      users.splice(idx, 1);
+      saveUsers(users);
+      return sendJson(res, 200, { ok: true, message: '회원 탈퇴가 완료되었습니다. 계정과 개인정보가 삭제되었습니다.' });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '회원 탈퇴 처리 중 오류가 발생했습니다.' });
+    }
+  }
+
   // --- STATIC FILE SERVING ---
   const relativePath = reqPath === '/' ? 'index.html' : reqPath.replace(/^\/+/, '');
-  // Prevent access to users.json directly via static serving
-  if (relativePath.toLowerCase() === 'users.json' || relativePath.split('/').some((seg) => seg.startsWith('.'))) {
+  // 회원 데이터(users.*), 숨김 파일(.env, .auth_secret 등), 허용되지 않은 확장자, 폴더 밖 경로는 제공하지 않는다
+  const baseName = path.basename(relativePath).toLowerCase();
+  const resolvedPath = path.resolve(__dirname, relativePath);
+  const blocked = baseName.startsWith('users.')
+    || relativePath.split('/').some((seg) => seg.startsWith('.'))
+    || !resolvedPath.startsWith(__dirname + path.sep)
+    || !MIME_TYPES[path.extname(baseName)];
+  if (blocked) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     return res.end('403 Forbidden');
   }
 
-  let filePath = path.join(__dirname, relativePath);
+  let filePath = resolvedPath;
   const extname = path.extname(filePath);
   let contentType = MIME_TYPES[extname] || 'application/octet-stream';
 
@@ -541,7 +739,7 @@ const server = http.createServer(async (req, res) => {
     } else {
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*'
+        'Cache-Control': extname === '.html' ? 'no-cache' : 'public, max-age=300'
       });
       res.end(content);
     }
