@@ -59,7 +59,7 @@ const AUTH_SECRET = loadAuthSecret();
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 function signToken(user) {
-  const payload = Buffer.from(JSON.stringify({ uid: user.id, email: user.email, exp: Date.now() + TOKEN_TTL_MS })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ uid: user.id, email: user.email, tv: user.tokenVersion || 0, exp: Date.now() + TOKEN_TTL_MS })).toString('base64url');
   const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
   return payload + '.' + sig;
 }
@@ -84,6 +84,144 @@ function getAuthUser(req) {
   const header = req.headers['authorization'] || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   return verifyToken(token);
+}
+
+// 토큰이 유효하고, 해당 회원이 아직 존재하며, 비밀번호 변경 등으로 무효화되지 않았을 때만 회원을 돌려준다
+function authenticateUser(req, users) {
+  const payload = getAuthUser(req);
+  if (!payload) return null;
+  const user = users.find(u => u.id === payload.uid && u.email.toLowerCase() === String(payload.email).toLowerCase());
+  if (!user) return null;
+  if ((payload.tv || 0) !== (user.tokenVersion || 0)) return null;
+  return user;
+}
+
+function publicUser(user) {
+  const isEmailAccount = normalizeProvider(user.provider) === 'email';
+  return {
+    id: user.id,
+    name: user.name,
+    brand: user.brand || '',
+    email: user.email,
+    marketingOptIn: Boolean(user.marketingOptIn),
+    provider: user.provider || 'email',
+    createdAt: user.createdAt,
+    emailVerified: isEmailAccount ? user.emailVerified === true : true
+  };
+}
+
+// --- 이메일 발송 (Brevo 무료 요금제: 하루 300통) ---
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+const BREVO_API_URL = process.env.BREVO_API_URL || 'https://api.brevo.com/v3/smtp/email';
+const MAIL_FROM_EMAIL = process.env.MAIL_FROM_EMAIL || '';
+const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'MarketingMap';
+// 메일 속 링크는 반드시 설정된 주소로 만든다 (요청의 Host 헤더를 쓰면 비밀번호 재설정 링크 조작이 가능해짐)
+const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+const MAIL_DAILY_LIMIT = Number(process.env.MAIL_DAILY_LIMIT) || 250; // 무료 한도(300)보다 낮게
+const MAIL_ENABLED = Boolean(BREVO_API_KEY && MAIL_FROM_EMAIL && PUBLIC_BASE_URL);
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+let mailDay = '';
+let mailCount = 0;
+
+function linkBase() {
+  return PUBLIC_BASE_URL || `http://localhost:${PORT}`;
+}
+
+function sha256Hex(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
+}
+
+// 일회용 토큰: 메일에는 원본을, DB에는 해시만 저장한다
+function newOneTimeToken() {
+  const token = crypto.randomBytes(32).toString('base64url');
+  return { token, hash: sha256Hex(token) };
+}
+
+function escapeHtmlServer(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function mailLayout(title, bodyHtml, ctaLabel, ctaLink) {
+  return `<!doctype html><html lang="ko"><body style="margin:0;background:#f4f4f5;font-family:-apple-system,'Malgun Gothic',sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:28px 16px;">
+<div style="background:#ffffff;border-radius:14px;padding:32px 28px;border:1px solid #e5e7eb;">
+<div style="font-size:13px;font-weight:800;color:#ff6b00;letter-spacing:.4px;margin-bottom:18px;">MarketingMap</div>
+<h1 style="font-size:20px;color:#111;margin:0 0 14px;">${escapeHtmlServer(title)}</h1>
+<div style="font-size:14px;line-height:1.7;color:#374151;">${bodyHtml}</div>
+<div style="margin:26px 0;"><a href="${escapeHtmlServer(ctaLink)}" style="display:inline-block;background:#ff6b00;color:#ffffff;text-decoration:none;font-weight:700;padding:13px 26px;border-radius:10px;">${escapeHtmlServer(ctaLabel)}</a></div>
+<div style="font-size:12px;color:#6b7280;line-height:1.6;">버튼이 열리지 않으면 아래 주소를 브라우저에 붙여 넣어 주세요.<br><span style="word-break:break-all;color:#374151;">${escapeHtmlServer(ctaLink)}</span></div>
+</div>
+<div style="font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;line-height:1.6;">본 메일은 MarketingMap 서비스 이용과 관련하여 발송된 안내 메일입니다.<br>본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.</div>
+</div></body></html>`;
+}
+
+function buildVerificationMail(user, link) {
+  const subject = '[MarketingMap] 이메일 인증을 완료해 주세요';
+  const html = mailLayout(
+    '이메일 인증',
+    `<strong>${escapeHtmlServer(user.name)}</strong>님, MarketingMap에 가입해 주셔서 감사합니다.<br>아래 버튼을 눌러 이메일 주소 인증을 완료해 주세요. 링크는 24시간 동안 유효합니다.`,
+    '이메일 인증하기',
+    link
+  );
+  const text = `${user.name}님, MarketingMap에 가입해 주셔서 감사합니다.\n아래 주소를 열어 이메일 인증을 완료해 주세요. (24시간 유효)\n\n${link}\n\n본인이 요청하지 않았다면 이 메일을 무시해 주세요.`;
+  return { subject, html, text };
+}
+
+function buildResetMail(user, link) {
+  const subject = '[MarketingMap] 비밀번호 재설정 안내';
+  const html = mailLayout(
+    '비밀번호 재설정',
+    `<strong>${escapeHtmlServer(user.name)}</strong>님, 비밀번호 재설정을 요청하셨습니다.<br>아래 버튼을 눌러 새 비밀번호를 설정해 주세요. 링크는 30분 동안만 유효하며 한 번만 사용할 수 있습니다.`,
+    '비밀번호 재설정하기',
+    link
+  );
+  const text = `${user.name}님, 비밀번호 재설정을 요청하셨습니다.\n아래 주소를 열어 새 비밀번호를 설정해 주세요. (30분 유효, 1회용)\n\n${link}\n\n본인이 요청하지 않았다면 이 메일을 무시해 주세요. 비밀번호는 변경되지 않습니다.`;
+  return { subject, html, text };
+}
+
+function buildPasswordChangedMail(user) {
+  const subject = '[MarketingMap] 비밀번호가 변경되었습니다';
+  const html = mailLayout(
+    '비밀번호 변경 안내',
+    `<strong>${escapeHtmlServer(user.name)}</strong>님의 계정 비밀번호가 방금 변경되었습니다.<br>본인이 변경하지 않았다면 즉시 비밀번호 재설정을 다시 진행해 주세요.`,
+    'MarketingMap 열기',
+    linkBase() + '/'
+  );
+  const text = `${user.name}님의 계정 비밀번호가 방금 변경되었습니다.\n본인이 변경하지 않았다면 즉시 비밀번호 재설정을 다시 진행해 주세요.\n${linkBase()}/`;
+  return { subject, html, text };
+}
+
+// 반환: { ok, mode?, reason? } - 실패해도 예외를 던지지 않는다 (메일 장애가 가입/로그인을 막지 않도록)
+async function sendMail({ to, subject, html, text }) {
+  if (!MAIL_ENABLED) {
+    console.log(`[메일(콘솔 모드)] 수신: ${to} | 제목: ${subject}\n${text}\n`);
+    return { ok: true, mode: 'console' };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (mailDay !== today) { mailDay = today; mailCount = 0; }
+  if (mailCount >= MAIL_DAILY_LIMIT) {
+    console.warn('[메일] 일일 발송 한도에 도달해 발송하지 않았습니다.');
+    return { ok: false, reason: 'daily_limit' };
+  }
+  mailCount++;
+  try {
+    const resp = await fetch(BREVO_API_URL, {
+      method: 'POST',
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender: { name: MAIL_FROM_NAME, email: MAIL_FROM_EMAIL }, to: [{ email: to }], subject, htmlContent: html, textContent: text }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '');
+      console.error(`[메일] 발송 실패 (${resp.status}): ${detail.slice(0, 200)}`);
+      return { ok: false, reason: 'provider_error' };
+    }
+    return { ok: true, mode: 'brevo' };
+  } catch (e) {
+    console.error('[메일] 발송 오류:', e.message + (e.cause ? ' (' + (e.cause.code || e.cause.message || e.cause) + ')' : ''));
+    return { ok: false, reason: 'network' };
+  }
 }
 
 // --- Social credential verification ---
@@ -376,6 +514,7 @@ function parseRequestBody(req) {
   });
 }
 
+if (!MAIL_ENABLED) console.warn('[메일] BREVO_API_KEY / MAIL_FROM_EMAIL / PUBLIC_BASE_URL 중 설정되지 않은 값이 있어 이메일을 실제로 보내지 않고 콘솔에만 출력합니다. (이메일 인증·비밀번호 재설정 메일 사용 시 .env 설정 필요)');
 if (!KAKAO_APP_ID) console.warn('[보안] KAKAO_APP_ID가 설정되지 않았습니다. 다른 카카오 앱에서 발급된 토큰도 허용됩니다. (환경변수 KAKAO_APP_ID 설정 권장)');
 
 // 시작 시 회원 DB 검사: 손상되었고 복구도 불가능하면 빈 목록으로 덮어쓰지 않고 서버를 중단한다
@@ -418,6 +557,11 @@ const server = http.createServer(async (req, res) => {
   if (reqPath === '/api/auth/social' && req.method === 'POST' && limited('soc:' + ip, 30, 10 * 60 * 1000)) return;
   if (reqPath === '/api/auth/account/delete' && req.method === 'POST' && limited('del:' + ip, 10, 15 * 60 * 1000)) return;
   if (reqPath === '/api/auth/profile/marketing' && req.method === 'POST' && limited('mkt:' + ip, 30, 10 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/verify-email' && req.method === 'GET' && limited('ver:' + ip, 30, 10 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/resend-verification' && req.method === 'POST' && limited('rsv:' + ip, 10, 60 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/password-reset/request' && req.method === 'POST' && limited('rstr:' + ip, 10, 60 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/password-reset/confirm' && req.method === 'POST' && limited('rstc:' + ip, 20, 60 * 60 * 1000)) return;
+  if (reqPath === '/api/auth/me' && req.method === 'GET' && limited('me:' + ip, 60, 10 * 60 * 1000)) return;
 
   // --- AUTHENTICATION API ENDPOINTS ---
   if (reqPath === '/api/auth/check-email' && req.method === 'GET') {
@@ -495,11 +639,20 @@ const server = http.createServer(async (req, res) => {
         lastLoginAt: now
       };
 
+      const verification = newOneTimeToken();
+      newUser.emailVerified = false;
+      newUser.emailVerifyHash = verification.hash;
+      newUser.emailVerifyExpiresAt = Date.now() + VERIFY_TOKEN_TTL_MS;
+
       users.push(newUser);
       saveUsers(users);
 
+      const verifyLink = `${linkBase()}/api/auth/verify-email?token=${encodeURIComponent(verification.token)}`;
+      const sentResult = await sendMail({ to: newUser.email, ...buildVerificationMail(newUser, verifyLink) });
+
       const token = signToken(newUser);
       return sendJson(res, 201, {
+        verificationSent: sentResult.ok,
         ok: true,
         message: `환영합니다, ${newUser.name}님! 회원가입이 완료되었습니다.`,
         token,
@@ -509,7 +662,8 @@ const server = http.createServer(async (req, res) => {
           brand: newUser.brand,
           email: newUser.email,
           provider: newUser.provider,
-          createdAt: newUser.createdAt
+          createdAt: newUser.createdAt,
+          emailVerified: false
         }
       });
     } catch (err) {
@@ -560,6 +714,7 @@ const server = http.createServer(async (req, res) => {
           brand: user.brand || '',
           email: user.email,
           marketingOptIn: Boolean(user.marketingOptIn),
+          emailVerified: normalizeProvider(user.provider) === 'email' ? user.emailVerified === true : true,
           provider: user.provider || 'email',
           createdAt: user.createdAt
         }
@@ -618,6 +773,7 @@ const server = http.createServer(async (req, res) => {
           provider: PROVIDER_LABELS[identity.providerKey],
           providerKey: identity.providerKey,
           providerId: identity.providerId,
+          emailVerified: identity.emailVerified,
           createdAt: now,
           lastLoginAt: now
         };
@@ -639,6 +795,7 @@ const server = http.createServer(async (req, res) => {
           brand: user.brand || '',
           email: user.email,
           marketingOptIn: Boolean(user.marketingOptIn),
+          emailVerified: normalizeProvider(user.provider) === 'email' ? user.emailVerified === true : true,
           provider: user.provider,
           createdAt: user.createdAt
         }
@@ -651,45 +808,161 @@ const server = http.createServer(async (req, res) => {
   // Update marketing opt-in
   if (reqPath === '/api/auth/profile/marketing' && req.method === 'POST') {
     try {
-      const authUser = getAuthUser(req);
-      if (!authUser) {
+      const body = await parseRequestBody(req);
+      const users = loadUsers();
+      const user = authenticateUser(req, users);
+      if (!user) {
         return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
       }
-      const body = await parseRequestBody(req);
       const requestedEmail = (body.email || '').trim().toLowerCase();
-      if (requestedEmail && requestedEmail !== String(authUser.email).toLowerCase()) {
+      if (requestedEmail && requestedEmail !== user.email.toLowerCase()) {
         return sendJson(res, 403, { ok: false, message: '본인 계정의 수신 설정만 변경할 수 있습니다.' });
       }
       const marketingOptIn = Boolean(body.marketingOptIn);
-
-      const users = loadUsers();
-      const user = users.find(u => u.email.toLowerCase() === String(authUser.email).toLowerCase());
-      if (user) {
-        user.marketingOptIn = marketingOptIn;
-        user.marketingConsentAt = marketingOptIn ? new Date().toISOString() : null;
-        saveUsers(users);
-        return sendJson(res, 200, { ok: true, message: '마케팅 수신 상태가 성공적으로 변경되었습니다.' });
-      }
-      return sendJson(res, 404, { ok: false, message: '사용자를 찾을 수 없습니다.' });
+      user.marketingOptIn = marketingOptIn;
+      user.marketingConsentAt = marketingOptIn ? new Date().toISOString() : null;
+      saveUsers(users);
+      return sendJson(res, 200, { ok: true, message: '마케팅 수신 상태가 성공적으로 변경되었습니다.' });
     } catch (err) {
       return sendJson(res, 500, { ok: false, message: '서버 오류' });
+    }
+  }
+
+  // 내 정보 조회 (로그인 상태 확인 + 최신 인증/수신 상태 동기화)
+  if (reqPath === '/api/auth/me' && req.method === 'GET') {
+    try {
+      const users = loadUsers();
+      const user = authenticateUser(req, users);
+      if (!user) {
+        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다.' });
+      }
+      return sendJson(res, 200, { ok: true, user: publicUser(user) });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '서버 오류' });
+    }
+  }
+
+  // 이메일 인증 링크 (메일 속 링크 클릭): 성공/실패와 관계없이 메인 화면으로 이동시키며 결과를 쿼리로 전달
+  if (reqPath === '/api/auth/verify-email' && req.method === 'GET') {
+    let verified = false;
+    try {
+      const token = parsedUrl.searchParams.get('token') || '';
+      if (token) {
+        const hash = sha256Hex(token);
+        const users = loadUsers();
+        const user = users.find(u => u.emailVerifyHash && u.emailVerifyHash === hash);
+        if (user && (user.emailVerifyExpiresAt || 0) > Date.now()) {
+          user.emailVerified = true;
+          delete user.emailVerifyHash;
+          delete user.emailVerifyExpiresAt;
+          saveUsers(users);
+          verified = true;
+        }
+      }
+    } catch (err) {
+      console.error('[이메일 인증] 처리 오류:', err.message);
+    }
+    res.writeHead(302, { Location: '/?emailVerified=' + (verified ? '1' : '0') });
+    return res.end();
+  }
+
+  // 인증 메일 다시 보내기 (로그인 필요)
+  if (reqPath === '/api/auth/resend-verification' && req.method === 'POST') {
+    try {
+      const users = loadUsers();
+      const user = authenticateUser(req, users);
+      if (!user) {
+        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
+      }
+      if (normalizeProvider(user.provider) !== 'email') {
+        return sendJson(res, 400, { ok: false, message: '이메일로 가입한 회원만 이메일 인증이 필요합니다.' });
+      }
+      if (user.emailVerified === true) {
+        return sendJson(res, 200, { ok: true, alreadyVerified: true, message: '이미 인증이 완료된 이메일입니다.' });
+      }
+      if (!rateLimit('rsvu:' + user.id, 3, 60 * 60 * 1000).ok) {
+        return sendJson(res, 429, { ok: false, message: '인증 메일은 1시간에 3번까지 보낼 수 있습니다. 잠시 후 다시 시도해 주세요.' });
+      }
+      const verification = newOneTimeToken();
+      user.emailVerifyHash = verification.hash;
+      user.emailVerifyExpiresAt = Date.now() + VERIFY_TOKEN_TTL_MS;
+      saveUsers(users);
+      const link = `${linkBase()}/api/auth/verify-email?token=${encodeURIComponent(verification.token)}`;
+      const result = await sendMail({ to: user.email, ...buildVerificationMail(user, link) });
+      if (!result.ok) {
+        return sendJson(res, 503, { ok: false, message: '인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+      }
+      return sendJson(res, 200, { ok: true, message: '인증 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.' });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '인증 메일 처리 중 오류가 발생했습니다.' });
+    }
+  }
+
+  // 비밀번호 재설정 요청: 가입 여부와 관계없이 항상 같은 응답을 주어 이메일 가입 여부를 알아낼 수 없게 한다
+  if (reqPath === '/api/auth/password-reset/request' && req.method === 'POST') {
+    const genericReply = { ok: true, message: '가입된 이메일이라면 비밀번호 재설정 안내 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요. 링크는 30분 동안 유효합니다.' };
+    try {
+      const body = await parseRequestBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      if (email && email.includes('@') && email.length <= 254) {
+        const users = loadUsers();
+        const user = users.find(u => u.email.toLowerCase() === email);
+        if (user && normalizeProvider(user.provider) === 'email' && rateLimit('rstu:' + user.id, 3, 60 * 60 * 1000).ok) {
+          const reset = newOneTimeToken();
+          user.resetHash = reset.hash;
+          user.resetExpiresAt = Date.now() + RESET_TOKEN_TTL_MS;
+          saveUsers(users);
+          const link = `${linkBase()}/?reset=${encodeURIComponent(reset.token)}`;
+          // 응답 시간으로 가입 여부를 추측하지 못하도록 메일 발송을 기다리지 않는다
+          sendMail({ to: user.email, ...buildResetMail(user, link) }).catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.error('[비밀번호 재설정] 요청 처리 오류:', err.message);
+    }
+    return sendJson(res, 200, genericReply);
+  }
+
+  // 비밀번호 재설정 확정: 일회용 토큰 + 새 비밀번호
+  if (reqPath === '/api/auth/password-reset/confirm' && req.method === 'POST') {
+    try {
+      const body = await parseRequestBody(req);
+      const token = String(body.token || '');
+      const password = String(body.password || '');
+      if (password.length < 6) {
+        return sendJson(res, 400, { ok: false, message: '비밀번호는 6자 이상 입력해 주세요.' });
+      }
+      const users = loadUsers();
+      const hash = token ? sha256Hex(token) : '';
+      const user = hash ? users.find(u => u.resetHash && u.resetHash === hash) : null;
+      if (!user || (user.resetExpiresAt || 0) < Date.now()) {
+        return sendJson(res, 400, { ok: false, message: '재설정 링크가 만료되었거나 올바르지 않습니다. 비밀번호 찾기를 다시 진행해 주세요.' });
+      }
+      user.passwordHash = hashPassword(password);
+      delete user.resetHash;
+      delete user.resetExpiresAt;
+      user.tokenVersion = (user.tokenVersion || 0) + 1; // 기존에 로그인되어 있던 모든 기기의 로그인 무효화
+      user.emailVerified = true; // 메일의 링크를 열었으므로 이메일 소유가 확인됨
+      saveUsers(users);
+      for (const key of Array.from(failureBuckets.keys())) {
+        if (key.endsWith('|' + user.email.toLowerCase())) failureBuckets.delete(key); // 로그인 잠금 해제
+      }
+      sendMail({ to: user.email, ...buildPasswordChangedMail(user) }).catch(() => {});
+      return sendJson(res, 200, { ok: true, message: '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.' });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '비밀번호 재설정 처리 중 오류가 발생했습니다.' });
     }
   }
 
   // 회원 탈퇴: 로그인 토큰 필수, 이메일 가입 회원은 비밀번호 재확인. 계정 정보는 즉시 삭제된다.
   if (reqPath === '/api/auth/account/delete' && req.method === 'POST') {
     try {
-      const authUser = getAuthUser(req);
-      if (!authUser) {
-        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
-      }
       const body = await parseRequestBody(req);
       const users = loadUsers();
-      const idx = users.findIndex(u => u.id === authUser.uid && u.email.toLowerCase() === String(authUser.email).toLowerCase());
-      if (idx < 0) {
-        return sendJson(res, 404, { ok: false, message: '이미 탈퇴했거나 존재하지 않는 계정입니다.' });
+      const user = authenticateUser(req, users);
+      if (!user) {
+        return sendJson(res, 401, { ok: false, message: '로그인이 필요합니다. 다시 로그인해 주세요.' });
       }
-      const user = users[idx];
       if (normalizeProvider(user.provider) === 'email') {
         const failKey = 'del:' + ip + '|' + user.email.toLowerCase();
         if (failureCount(failKey, 15 * 60 * 1000) >= 5 * RATE_SCALE) {
@@ -701,7 +974,7 @@ const server = http.createServer(async (req, res) => {
         }
         clearFailures(failKey);
       }
-      users.splice(idx, 1);
+      users.splice(users.indexOf(user), 1);
       saveUsers(users);
       return sendJson(res, 200, { ok: true, message: '회원 탈퇴가 완료되었습니다. 계정과 개인정보가 삭제되었습니다.' });
     } catch (err) {
