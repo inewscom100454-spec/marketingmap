@@ -57,6 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>`;
 
+  // 사용자/소셜 제공사에서 온 문자열을 HTML에 넣기 전에 반드시 이스케이프한다 (XSS 방지)
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
   // Helper to strip HTML tags from a string
   function stripHtmlTags(str) {
     if (!str) return '';
@@ -2519,19 +2524,6 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       list = [];
     }
     if (!Array.isArray(list)) list = [];
-    if (!list.some(u => u.email.toLowerCase() === 'ceo@marketingmap.kr')) {
-      list.unshift({
-        id: 'usr_demo_ceo',
-        name: '오드리 대표',
-        brand: '오드리고깃집',
-        email: 'ceo@marketingmap.kr',
-        passwordHash: simpleHash('123456'),
-        marketingOptIn: true,
-        provider: 'email',
-        createdAt: '2026-10-28T00:00:00.000Z'
-      });
-      localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(list));
-    }
     return list;
   }
 
@@ -2576,11 +2568,11 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const raw = localStorage.getItem('current_user_profile');
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    const name = (localStorage.getItem('user_name') || '오드리 대표').replace(/님$/, '');
+    const name = (localStorage.getItem('user_name') || '회원').replace(/님$/, '');
     return {
       name,
       brand: localStorage.getItem('user_brand') || '',
-      email: localStorage.getItem('user_email') || 'ceo@marketingmap.kr',
+      email: localStorage.getItem('user_email') || '',
       provider: localStorage.getItem('user_provider') || 'email',
       createdAt: localStorage.getItem('user_created_at') || '2026-10-28'
     };
@@ -2670,31 +2662,32 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       '네이버(NAVER)': '네이버 간편인증',
       Google: 'Google 계정 연동'
     };
-    const dateStr = (profile.createdAt || '').slice(0, 10) || '2026-10-28';
+    const dateStr = (profile.createdAt || '').slice(0, 10) || '-';
+    const isEmailAccount = (profile.provider || 'email') === 'email';
 
     container.innerHTML = `
       <div class="account-profile-box">
         <div class="account-profile-row">
           <span class="account-profile-label">대표자 성함</span>
-          <span class="account-profile-val">${profile.name}님</span>
+          <span class="account-profile-val">${escapeHtml(profile.name)}님</span>
         </div>
         <div class="account-profile-row">
           <span class="account-profile-label">가입 이메일</span>
-          <span class="account-profile-val">${profile.email || '-'}</span>
+          <span class="account-profile-val">${escapeHtml(profile.email || '-')}</span>
         </div>
         <div class="account-profile-row">
           <span class="account-profile-label">가입 방식</span>
-          <span class="account-profile-val">${providerMap[profile.provider] || profile.provider}</span>
+          <span class="account-profile-val">${escapeHtml(providerMap[profile.provider] || profile.provider)}</span>
         </div>
         <div class="account-profile-row">
           <span class="account-profile-label">가입 일자</span>
-          <span class="account-profile-val">${dateStr}</span>
+          <span class="account-profile-val">${escapeHtml(dateStr)}</span>
         </div>
       </div>
       <div class="input-group" style="margin-bottom: 14px;">
         <label for="profile-brand-edit" style="font-size:12px; font-weight:700; color:#18181b;">내 비즈니스 상호명 (브랜드명) 관리</label>
         <div class="email-check-row" style="margin-top:4px;">
-          <input type="text" id="profile-brand-edit" value="${profile.brand || ''}" placeholder="상호명을 입력해 두시면 폼에 자동 연동됩니다">
+          <input type="text" id="profile-brand-edit" value="${escapeHtml(profile.brand || '')}" placeholder="상호명을 입력해 두시면 폼에 자동 연동됩니다">
           <button type="button" class="btn-check-duplicate" onclick="window.saveProfileBrand()">저장·적용</button>
         </div>
         <div id="profile-save-msg" class="email-check-msg ok" style="display:none;">✅ 상호명이 저장되어 좌측 마케팅 입력창에 반영되었습니다!</div>
@@ -2703,6 +2696,16 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         <button type="button" class="btn-primary-action" style="flex:1;" onclick="document.getElementById('account-overlay').classList.remove('active')">확인</button>
         <button type="button" class="btn-secondary" style="padding:10px 16px;" onclick="window.handleLogoutUser()">로그아웃</button>
       </div>
+      <div style="margin-top:14px; padding-top:10px; border-top:1px solid #eee; text-align:center;">
+        <button type="button" class="btn-withdraw-link" onclick="window.toggleWithdrawBox()">회원 탈퇴</button>
+      </div>
+      <div id="withdraw-box" class="withdraw-box" style="display:none;">
+        <p>탈퇴하면 계정과 저장된 개인정보가 즉시 삭제되며 복구할 수 없습니다.</p>
+        ${isEmailAccount ? '<input type="password" id="withdraw-password" placeholder="비밀번호를 다시 입력해 주세요" autocomplete="current-password">' : ''}
+        <div id="withdraw-msg" class="withdraw-msg" style="display:none;"></div>
+        <button type="button" class="btn-withdraw-confirm" onclick="window.confirmWithdraw()">탈퇴하기</button>
+      </div>
+
     `;
     overlay.classList.add('active');
   };
@@ -2726,6 +2729,48 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     }
   };
 
+  window.toggleWithdrawBox = function() {
+    const box = document.getElementById('withdraw-box');
+    if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  };
+
+  window.confirmWithdraw = async function() {
+    const profile = getCurrentUserProfile();
+    if (!profile || !profile.email) return;
+    const isEmailAccount = (profile.provider || 'email') === 'email';
+    const password = document.getElementById('withdraw-password')?.value || '';
+    const msgEl = document.getElementById('withdraw-msg');
+    const setMsg = (text) => { if (msgEl) { msgEl.textContent = text; msgEl.style.display = text ? 'block' : 'none'; } };
+    setMsg('');
+    if (isEmailAccount && !password) { setMsg('비밀번호를 입력해 주세요.'); return; }
+    if (!window.confirm('정말 탈퇴하시겠습니까?\n계정과 저장된 개인정보가 즉시 삭제되며 복구할 수 없습니다.')) return;
+
+    let serverHandled = false;
+    try {
+      const resp = await fetch('/api/auth/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('auth_token') || '') },
+        body: JSON.stringify({ password })
+      });
+      const data = await resp.json().catch(() => null);
+      if (data && typeof data.ok === 'boolean') {
+        if (!data.ok && resp.status !== 404) { setMsg(data.message || '회원 탈퇴에 실패했습니다.'); return; }
+        serverHandled = true;
+      }
+    } catch (e) {
+      // 서버 API가 없는 정적 호스팅: 브라우저에 저장된 계정만 삭제
+    }
+
+    if (!serverHandled && isEmailAccount) {
+      const record = getLocalUsersDb().find((u) => u.email.toLowerCase() === profile.email.toLowerCase());
+      if (record && record.passwordHash && record.passwordHash !== simpleHash(password)) { setMsg('비밀번호가 일치하지 않습니다.'); return; }
+    }
+    const remaining = getLocalUsersDb().filter((u) => u.email.toLowerCase() !== profile.email.toLowerCase());
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(remaining));
+    window.handleLogoutUser();
+    alert('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+  };
+
   window.handleLogoutUser = function() {
     localStorage.removeItem('is_logged_in');
     localStorage.removeItem('user_name');
@@ -2746,10 +2791,10 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     if (isLoggedIn) {
       const profile = getCurrentUserProfile();
       const userName = `${profile.name}님`;
-      const brandBadge = profile.brand ? `<span class="auth-brand-badge">${profile.brand}</span>` : '';
+      const brandBadge = profile.brand ? `<span class="auth-brand-badge">${escapeHtml(profile.brand)}</span>` : '';
       authContainer.innerHTML = `
         <a href="#account" id="nav-account-pill" class="auth-user-pill" title="내 계정 및 상호명 정보 보기">
-          <span>👤 ${userName}</span>
+          <span>👤 ${escapeHtml(userName)}</span>
           ${brandBadge}
         </a>
         <span class="nav-divider">|</span>
@@ -3447,7 +3492,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
       saveLocalUserRecord(registeredUser, passwordVal);
       setLoggedInSession(registeredUser, token);
-      showAuthFeedback(`🎉 환영합니다, <strong>${registeredUser.name}님</strong>! 회원가입이 완료되었습니다.`, 'success');
+      showAuthFeedback(`🎉 환영합니다, <strong>${escapeHtml(registeredUser.name)}님</strong>! 회원가입이 완료되었습니다.`, 'success');
 
       setTimeout(() => {
         if (btnSubmitReg) btnSubmitReg.disabled = false;
@@ -3792,7 +3837,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     setLoggedInSession(socialUser, token);
     triggerPendingAuthActions();
 
-    showAuthFeedback(`🎉 환영합니다, <strong>${socialUser.name} 대표님</strong>!`, 'success');
+    showAuthFeedback(`🎉 환영합니다, <strong>${escapeHtml(socialUser.name)} 대표님</strong>!`, 'success');
   }
 
   // Circular social buttons event binding
@@ -3959,7 +4004,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
       saveLocalUserRecord(loggedInUser);
       setLoggedInSession(loggedInUser, token);
-      showAuthFeedback(`✅ 환영합니다, <strong>${loggedInUser.name}님</strong>!`, 'success');
+      showAuthFeedback(`✅ 환영합니다, <strong>${escapeHtml(loggedInUser.name)}님</strong>!`, 'success');
 
       setTimeout(() => {
         if (btnSubmitLogin) btnSubmitLogin.disabled = false;
