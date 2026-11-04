@@ -3071,29 +3071,212 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   });
   updateArchiveBadge();
 
-  // --- Unified Auth Modal Tab Switching ---
+  ﻿  // --- Unified Auth Modal Tab & Multi-Step Signup Flow (Matches User Reference) ---
   const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
+  const registerFlowContainer = document.getElementById('register-flow-container');
   const btnCheckEmail = document.getElementById('btn-check-email');
   const registerEmailInput = document.getElementById('register-email');
   const emailCheckMsg = document.getElementById('email-check-msg');
   let lastCheckedEmail = '';
 
-  if (tabLogin && tabRegister && loginForm && registerForm) {
+  // 3단계 스텝 제어 함수
+  window.showSignupStep = function(stepName) {
+    const pChoice = document.getElementById('signup-step-choice');
+    const pTerms = document.getElementById('signup-step-terms');
+    const pForm = document.getElementById('signup-step-form');
+
+    if (pChoice) pChoice.style.display = (stepName === 'choice') ? 'block' : 'none';
+    if (pTerms) pTerms.style.display = (stepName === 'terms') ? 'block' : 'none';
+    if (pForm) pForm.style.display = (stepName === 'form') ? 'block' : 'none';
+
+    // 폼으로 갈 때 생년월일 셀렉트 초기화
+    if (stepName === 'form') {
+      initBirthSelectOptions();
+    }
+  };
+
+  // 약관 전문 토글 함수
+  window.toggleStepTerms = function(boxId) {
+    const el = document.getElementById(boxId);
+    if (!el) return;
+    el.classList.toggle('hidden');
+  };
+
+  // 모달 탭 전환 이벤트
+  if (tabLogin && tabRegister && loginForm) {
     tabLogin.addEventListener('click', () => {
       showAuthFeedback('');
       tabLogin.classList.add('active');
       tabRegister.classList.remove('active');
       loginForm.classList.add('active-form');
-      registerForm.classList.remove('active-form');
+      loginForm.style.display = 'block';
+      if (registerFlowContainer) {
+        registerFlowContainer.classList.remove('active-form');
+        registerFlowContainer.style.display = 'none';
+      }
     });
 
     tabRegister.addEventListener('click', () => {
       showAuthFeedback('');
       tabRegister.classList.add('active');
       tabLogin.classList.remove('active');
-      registerForm.classList.add('active-form');
       loginForm.classList.remove('active-form');
+      loginForm.style.display = 'none';
+      if (registerFlowContainer) {
+        registerFlowContainer.classList.add('active-form');
+        registerFlowContainer.style.display = 'block';
+        window.showSignupStep('choice');
+      }
+    });
+  }
+
+  // --- Step 1: 회원가입 방식 선택 (첨부 1) 버튼 바인딩 ---
+  const btnChoiceGeneral = document.getElementById('btn-choice-general');
+  const btnChoiceKakao = document.getElementById('btn-choice-kakao');
+  const btnChoiceNaver = document.getElementById('btn-choice-naver');
+  const linkGotoLoginFromChoice = document.getElementById('link-goto-login-from-choice');
+
+  if (btnChoiceGeneral) {
+    btnChoiceGeneral.addEventListener('click', () => {
+      window.showSignupStep('terms');
+    });
+  }
+  if (btnChoiceKakao) {
+    btnChoiceKakao.addEventListener('click', () => {
+      handleRealKakaoLogin();
+    });
+  }
+  if (btnChoiceNaver) {
+    btnChoiceNaver.addEventListener('click', () => {
+      handleRealNaverLogin();
+    });
+  }
+  if (linkGotoLoginFromChoice && tabLogin) {
+    linkGotoLoginFromChoice.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabLogin.click();
+    });
+  }
+
+  // --- Step 2: 약관 동의 (첨부 4) 체크박스 및 버튼 바인딩 ---
+  const termsAllCheck = document.getElementById('terms-all-check');
+  const termsAgeCheck = document.getElementById('terms-age-check');
+  const termsServiceCheck = document.getElementById('terms-service-check');
+  const termsPrivacyCheck = document.getElementById('terms-privacy-check');
+  const termsOrderCheck = document.getElementById('terms-order-check');
+  const termsThirdpartyCheck = document.getElementById('terms-thirdparty-check');
+  const btnTermsProceed = document.getElementById('btn-terms-proceed');
+  const btnBackToStepChoice = document.getElementById('btn-back-to-step-choice');
+
+  const stepSubCheckboxes = [termsAgeCheck, termsServiceCheck, termsPrivacyCheck, termsOrderCheck, termsThirdpartyCheck].filter(Boolean);
+
+  function updateTermsProceedBtnState() {
+    const mandatoryPassed = Boolean(termsAgeCheck?.checked && termsServiceCheck?.checked && termsPrivacyCheck?.checked);
+    if (btnTermsProceed) {
+      if (mandatoryPassed) {
+        btnTermsProceed.classList.remove('disabled');
+        btnTermsProceed.classList.add('active');
+      } else {
+        btnTermsProceed.classList.add('disabled');
+        btnTermsProceed.classList.remove('active');
+      }
+    }
+    if (termsAllCheck) {
+      const allChecked = stepSubCheckboxes.length > 0 && stepSubCheckboxes.every(cb => cb.checked);
+      termsAllCheck.checked = allChecked;
+    }
+  }
+
+  if (termsAllCheck) {
+    termsAllCheck.addEventListener('change', () => {
+      const isChecked = termsAllCheck.checked;
+      stepSubCheckboxes.forEach(cb => { cb.checked = isChecked; });
+      updateTermsProceedBtnState();
+    });
+  }
+
+  stepSubCheckboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      updateTermsProceedBtnState();
+    });
+  });
+
+  if (btnTermsProceed) {
+    btnTermsProceed.addEventListener('click', () => {
+      const mandatoryPassed = Boolean(termsAgeCheck?.checked && termsServiceCheck?.checked && termsPrivacyCheck?.checked);
+      if (!mandatoryPassed) {
+        showAuthFeedback('⚠️ 필수 이용약관(만 14세 이상, 서비스 이용약관, 개인정보 수집)에 동의해 주세요.', 'error');
+        if (!termsAgeCheck?.checked) termsAgeCheck?.focus();
+        else if (!termsServiceCheck?.checked) termsServiceCheck?.focus();
+        else if (!termsPrivacyCheck?.checked) termsPrivacyCheck?.focus();
+        return;
+      }
+      showAuthFeedback('');
+      window.showSignupStep('form');
+    });
+  }
+
+  if (btnBackToStepChoice) {
+    btnBackToStepChoice.addEventListener('click', () => {
+      window.showSignupStep('choice');
+    });
+  }
+
+  // --- Step 3: 회원정보 및 부가정보 (첨부 5) 바인딩 ---
+  let isBirthInit = false;
+  function initBirthSelectOptions() {
+    if (isBirthInit) return;
+    isBirthInit = true;
+
+    const ySel = document.getElementById('register-birth-year');
+    const mSel = document.getElementById('register-birth-month');
+    const dSel = document.getElementById('register-birth-day');
+
+    if (ySel && ySel.options.length <= 1) {
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear - 14; y >= 1940; y--) {
+        const opt = document.createElement('option');
+        opt.value = String(y);
+        opt.textContent = ${y}년;
+        ySel.appendChild(opt);
+      }
+    }
+    if (mSel && mSel.options.length <= 1) {
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = String(m).padStart(2, '0');
+        opt.textContent = ${m}월;
+        mSel.appendChild(opt);
+      }
+    }
+    if (dSel && dSel.options.length <= 1) {
+      for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement('option');
+        opt.value = String(d).padStart(2, '0');
+        opt.textContent = ${d}일;
+        dSel.appendChild(opt);
+      }
+    }
+  }
+
+  // 성별 토글 버튼
+  const genderButtons = document.querySelectorAll('.sc-btn-gender');
+  const genderHiddenInput = document.getElementById('register-gender');
+  genderButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      genderButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const val = btn.getAttribute('data-gender') || 'M';
+      if (genderHiddenInput) genderHiddenInput.value = val;
+    });
+  });
+
+  // 취소 버튼 -> 약관 단계로 복귀
+  const btnCancelSignup = document.getElementById('btn-cancel-signup');
+  if (btnCancelSignup) {
+    btnCancelSignup.addEventListener('click', () => {
+      window.showSignupStep('terms');
     });
   }
 
@@ -3113,31 +3296,27 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     const existsLocally = localDb.some(u => u.email.toLowerCase() === email);
     let available = !existsLocally;
 
-    // Also query backend server /api/auth/check-email
     try {
-      const resp = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+      const resp = await fetch(/api/auth/check-email?email=);
       if (resp.ok) {
         const data = await resp.json();
-        if (typeof data.available === 'boolean') {
-          available = data.available && !existsLocally;
-        }
+        available = Boolean(data.available);
       }
-    } catch (err) {
-      // Static/offline mode fallback uses localDb result
+    } catch (e) {
+      // offline fallback
     }
 
     if (emailCheckMsg) {
       if (available) {
-        emailCheckMsg.textContent = '✅ 사용 가능한 이메일 주소입니다.';
+        emailCheckMsg.textContent = '✓ 사용 가능한 이메일 주소입니다.';
         emailCheckMsg.className = 'email-check-msg ok';
-        lastCheckedEmail = email;
       } else {
-        emailCheckMsg.textContent = '⚠️ 이미 가입된 이메일 주소입니다. 다른 이메일을 입력하거나 로그인해 주세요.';
+        emailCheckMsg.textContent = '✕ 이미 가입된 이메일 주소입니다.';
         emailCheckMsg.className = 'email-check-msg err';
-        lastCheckedEmail = '';
       }
       emailCheckMsg.style.display = 'block';
     }
+    lastCheckedEmail = email;
     return available;
   }
 
@@ -3151,6 +3330,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     });
   }
 
+  // 최종 폼 제출 (회원가입 완료)
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -3162,13 +3342,15 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const passwordVal = document.getElementById('register-password')?.value || '';
       const passwordConfirmEl = document.getElementById('register-password-confirm');
       const passwordConfirmVal = passwordConfirmEl ? passwordConfirmEl.value : passwordVal;
-      const termsAge = document.getElementById('terms-age');
-      const termsService = document.getElementById('terms-service');
-      const termsPrivacy = document.getElementById('terms-privacy');
-      const termsMarketing = document.getElementById('terms-marketing');
-      const marketingOptIn = Boolean(termsMarketing?.checked);
-      const termsContainer = document.querySelector('.terms-container');
-      if (termsContainer) termsContainer.classList.remove('terms-error-highlight');
+      const phoneVal = (document.getElementById('register-phone')?.value || '').trim();
+      const smsOptIn = Boolean(document.getElementById('register-sms-optin')?.checked);
+      const genderVal = document.getElementById('register-gender')?.value || 'M';
+      const birthType = document.getElementById('register-birth-type')?.value || 'solar';
+      const birthY = document.getElementById('register-birth-year')?.value || '';
+      const birthM = document.getElementById('register-birth-month')?.value || '';
+      const birthD = document.getElementById('register-birth-day')?.value || '';
+      const birthDateStr = (birthY && birthM && birthD) ? ${birthY}-- () : '';
+      const vipCodeVal = (document.getElementById('register-vip-code')?.value || '').trim();
 
       if (!nameVal) {
         showAuthFeedback('대표자 성함을 입력해 주세요.', 'error');
@@ -3190,23 +3372,22 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         passwordConfirmEl.focus();
         return;
       }
+      if (!phoneVal) {
+        showAuthFeedback('휴대폰 번호를 입력해 주세요.', 'error');
+        document.getElementById('register-phone')?.focus();
+        return;
+      }
 
-      // 약관 동의 여부 엄격 검증 (전체 동의 또는 필수 항목 미동의 시 차단)
-      if (!termsAge?.checked || !termsService?.checked || !termsPrivacy?.checked) {
-        showAuthFeedback('⚠️ 서비스 이용을 위해 [전체 동의] 또는 필수 이용약관에 모두 체크해 주세요.', 'error');
-        if (termsContainer) {
-          termsContainer.classList.add('terms-error-highlight');
-          termsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-        if (!termsAge?.checked) termsAge?.focus();
-        else if (!termsService?.checked) termsService?.focus();
-        else if (!termsPrivacy?.checked) termsPrivacy?.focus();
+      // 약관 검증
+      if (!termsAgeCheck?.checked || !termsServiceCheck?.checked || !termsPrivacyCheck?.checked) {
+        showAuthFeedback('⚠️ 서비스 이용을 위해 필수 이용약관에 동의해 주세요.', 'error');
+        window.showSignupStep('terms');
         return;
       }
 
       const isAvailable = await verifyEmailAvailability(emailVal);
       if (!isAvailable) {
-        showAuthFeedback('이미 가입된 이메일 주소입니다. 상단 [로그인] 탭을 이용해 주세요.', 'error');
+        showAuthFeedback('이미 가입된 이메일 주소입니다. 로그인 탭을 이용해 주세요.', 'error');
         return;
       }
 
@@ -3225,10 +3406,16 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
             brand: brandVal,
             email: emailVal,
             password: passwordVal,
-            termsAge: termsAge?.checked,
-            termsService: termsService?.checked,
-            termsPrivacy: termsPrivacy?.checked,
-            marketingOptIn
+            phone: phoneVal,
+            gender: genderVal,
+            birth: birthDateStr,
+            vipCode: vipCodeVal,
+            smsOptIn,
+            termsAge: termsAgeCheck?.checked,
+            termsService: termsServiceCheck?.checked,
+            termsPrivacy: termsPrivacyCheck?.checked,
+            termsOrder: termsOrderCheck?.checked,
+            termsThirdparty: termsThirdpartyCheck?.checked
           })
         });
         const result = await resp.json();
@@ -3240,21 +3427,26 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         registeredUser = result.user;
         token = result.token || '';
       } catch (networkErr) {
-        // Fallback if static hosting
+        // Fallback for static hosting
         registeredUser = {
           id: 'usr_' + Date.now(),
           name: nameVal,
           brand: brandVal,
           email: emailVal,
+          phone: phoneVal,
+          gender: genderVal,
+          birth: birthDateStr,
+          vipCode: vipCodeVal,
+          smsOptIn,
           provider: 'email',
           createdAt: new Date().toISOString()
         };
-        token = btoa(encodeURIComponent(`${registeredUser.id}:${emailVal}`));
+        token = btoa(encodeURIComponent(${registeredUser.id}:));
       }
 
       saveLocalUserRecord(registeredUser, passwordVal);
       setLoggedInSession(registeredUser, token);
-      showAuthFeedback(`🎉 환영합니다, <strong>${registeredUser.name}님</strong>! 무료 회원가입이 완료되었습니다.`, 'success');
+      showAuthFeedback(🎉 환영합니다, <strong>님</strong>! 회원가입이 완료되었습니다., 'success');
 
       setTimeout(() => {
         if (btnSubmitReg) btnSubmitReg.disabled = false;
@@ -3262,7 +3454,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         if (emailCheckMsg) emailCheckMsg.style.display = 'none';
         closeLoginModal();
         triggerPendingAuthActions();
-      }, 650);
+      }, 700);
     });
   }
 
