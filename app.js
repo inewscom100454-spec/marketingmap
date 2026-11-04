@@ -3241,7 +3241,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         resetSocialGateUI();
         termsSubChecks.forEach((c) => { c.checked = false; });
         refreshTermsState();
-        finalizeOAuthSignIn(profile.provider, profile.name, profile.email, { termsAgreed: true, marketingOptIn: marketingChecked });
+        finalizeOAuthSignIn(profile.provider, profile.name, profile.email, { termsAgreed: true, marketingOptIn: marketingChecked, credential: profile.credential });
         return;
       }
       window.showSignupStep('form');
@@ -3505,7 +3505,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
               const profile = kakaoAccount.profile || {};
               const userName = profile.nickname || '카카오 회원';
               const userEmail = kakaoAccount.email || `kakao_${res.id}@marketingmap.kr`;
-              completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail);
+              completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail, { providerKey: 'kakao', accessToken: authObj.access_token });
             },
             fail: function(error) {
               console.error(error);
@@ -3544,7 +3544,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       if (payload) {
         const userName = payload.name || '구글 회원';
         const userEmail = payload.email || `google_user@gmail.com`;
-        completeOAuthSignIn('Google', userName, userEmail);
+        completeOAuthSignIn('Google', userName, userEmail, { providerKey: 'google', idToken: response.credential });
       }
     }
   }
@@ -3573,7 +3573,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
                     const userInfo = await res.json();
                     const userName = userInfo.name || '구글 회원';
                     const userEmail = userInfo.email || `google_${Date.now()}@gmail.com`;
-                    completeOAuthSignIn('Google', userName, userEmail);
+                    completeOAuthSignIn('Google', userName, userEmail, { providerKey: 'google', accessToken: tokenResponse.access_token });
                     return;
                   }
                 } catch (err) {
@@ -3636,6 +3636,14 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     }
   }
 
+  function naverAccessTokenFromHash() {
+    try {
+      return new URLSearchParams(window.location.hash.replace(/^#/, '')).get('access_token') || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
   function checkNaverLoginCallback() {
     try {
       if (!naverLoginInstance) return;
@@ -3650,12 +3658,13 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
                 window.opener.postMessage({
                   type: 'NAVER_LOGIN_SUCCESS',
                   name: name,
-                  email: email
-                }, '*');
+                  email: email,
+                  accessToken: naverAccessTokenFromHash()
+                }, window.location.origin);
               } catch (e) {}
               window.close();
             } else {
-              completeOAuthSignIn('네이버(NAVER)', name, email);
+              completeOAuthSignIn('네이버(NAVER)', name, email, { providerKey: 'naver', accessToken: naverAccessTokenFromHash() });
               if (history.replaceState) {
                 history.replaceState(null, document.title, window.location.pathname + window.location.search);
               }
@@ -3674,9 +3683,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     });
 
     window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'NAVER_LOGIN_SUCCESS') {
-        const { name, email } = event.data;
-        completeOAuthSignIn('네이버(NAVER)', name, email);
+      if (event.origin === window.location.origin && event.data && event.data.type === 'NAVER_LOGIN_SUCCESS') {
+        const { name, email, accessToken } = event.data;
+        completeOAuthSignIn('네이버(NAVER)', name, email, { providerKey: 'naver', accessToken });
       }
     });
   }
@@ -3701,7 +3710,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     showAuthFeedback(`${provider} 로그인을 불러오지 못했습니다. 잠시 후 다시 시도하시거나 이메일로 가입해 주세요.`, 'error');
   }
 
-  async function completeOAuthSignIn(provider, name, email) {
+  async function completeOAuthSignIn(provider, name, email, credential) {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanName = (name || '').trim();
 
@@ -3720,16 +3729,15 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     }
 
     if (isExistingMember) {
-      return finalizeOAuthSignIn(provider, cleanName, cleanEmail, {});
+      return finalizeOAuthSignIn(provider, cleanName, cleanEmail, { credential });
     }
-    openSocialConsentGate({ provider, name: cleanName, email: cleanEmail });
+    openSocialConsentGate({ provider, name: cleanName, email: cleanEmail, credential });
   }
 
   // opts.termsAgreed: 약관 동의 완료 여부, opts.marketingOptIn: 마케팅 수신 동의(사용자가 직접 체크한 경우에만 true)
   async function finalizeOAuthSignIn(provider, name, email, opts = {}) {
-    closeLoginModal();
-
     const consentAt = new Date().toISOString();
+    const credential = opts.credential || null;
     let socialUser = {
       id: 'usr_oauth_' + Date.now(),
       name: name || '회원',
@@ -3751,27 +3759,35 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           provider,
-          name: socialUser.name,
-          brand: '',
-          email: socialUser.email,
+          providerKey: credential ? (credential.providerKey || '') : '',
+          accessToken: credential ? (credential.accessToken || '') : '',
+          idToken: credential ? (credential.idToken || '') : '',
           termsAgreed: Boolean(opts.termsAgreed),
           marketingOptIn: Boolean(opts.marketingOptIn)
         })
       });
-      const data = await resp.json().catch(() => ({}));
-      if (resp.status === 400 && data.needsConsent) {
-        // 서버에 아직 없는 신규 회원 → 동의 단계부터 진행
-        openSocialConsentGate({ provider, name: socialUser.name, email: socialUser.email });
-        return;
-      }
-      if (resp.ok && data.ok && data.user) {
+      const data = await resp.json().catch(() => null);
+      if (data && typeof data.ok === 'boolean') {
+        if (data.needsConsent) {
+          // 서버에 아직 없는 신규 회원 → 약관 동의 단계부터 진행
+          openSocialConsentGate({ provider, name: socialUser.name, email: socialUser.email, credential });
+          return;
+        }
+        if (!data.ok) {
+          // 서버가 인증을 거절한 경우에는 절대 로컬 로그인으로 넘어가지 않는다
+          showLoginModal('', 'login');
+          showAuthFeedback(data.message || '소셜 로그인에 실패했습니다. 다시 시도해 주세요.', 'error');
+          return;
+        }
         socialUser = { ...socialUser, ...data.user };
         token = data.token || '';
       }
+      // data가 없으면 서버 API가 없는 정적 호스팅(GitHub Pages 등) → 브라우저 로컬 가입으로 처리
     } catch (e) {
-      // 정적 호스팅(서버 API 없음)에서는 로컬 가입으로 처리
+      // 네트워크 오류 시 정적 호스팅과 동일하게 로컬 처리
     }
 
+    closeLoginModal();
     saveLocalUserRecord(socialUser);
     setLoggedInSession(socialUser, token);
     triggerPendingAuthActions();
