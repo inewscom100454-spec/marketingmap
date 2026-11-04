@@ -177,6 +177,8 @@ const server = http.createServer(async (req, res) => {
           vipCode,
           smsOptIn,
           industry,
+        termsAgreedAt: now,
+        marketingConsentAt: (marketingOptIn || smsOptIn) ? now : null,
         provider: 'email',
         createdAt: now,
         lastLoginAt: now
@@ -237,6 +239,7 @@ const server = http.createServer(async (req, res) => {
           name: user.name,
           brand: user.brand || '',
           email: user.email,
+          marketingOptIn: Boolean(user.marketingOptIn),
           provider: user.provider || 'email',
           createdAt: user.createdAt
         }
@@ -254,9 +257,13 @@ const server = http.createServer(async (req, res) => {
       const brand = (body.brand || '').trim();
       const email = (body.email || `${provider.toLowerCase()}_${Date.now()}@social.marketingmap.kr`).trim().toLowerCase();
       const marketingOptIn = Boolean(body.marketingOptIn);
+      const termsAgreed = Boolean(body.termsAgreed);
 
       const users = loadUsers();
       let user = users.find(u => u.email.toLowerCase() === email);
+      if (!user && !termsAgreed) {
+        return sendJson(res, 400, { ok: false, needsConsent: true, message: '서비스 이용약관과 개인정보 수집·이용에 동의해 주세요.' });
+      }
       const now = new Date().toISOString();
 
       if (!user) {
@@ -267,6 +274,8 @@ const server = http.createServer(async (req, res) => {
           email,
           passwordHash: hashPassword(crypto.randomBytes(12).toString('hex')),
           marketingOptIn: marketingOptIn,
+          termsAgreedAt: now,
+          marketingConsentAt: marketingOptIn ? now : null,
           provider,
           createdAt: now,
           lastLoginAt: now
@@ -310,6 +319,7 @@ const server = http.createServer(async (req, res) => {
       const user = users.find(u => u.email.toLowerCase() === email);
       if (user) {
         user.marketingOptIn = marketingOptIn;
+        user.marketingConsentAt = marketingOptIn ? new Date().toISOString() : null;
         saveUsers(users);
         return sendJson(res, 200, { ok: true, message: '마케팅 수신 상태가 성공적으로 변경되었습니다.' });
       }
