@@ -142,6 +142,7 @@ const server = http.createServer(async (req, res) => {
         const birth = (body.birth || "").trim();
         const vipCode = (body.vipCode || "").trim();
         const smsOptIn = Boolean(body.smsOptIn);
+        const industry = (body.industry || '').trim();
 
       if (!name) {
         return sendJson(res, 400, { ok: false, message: '대표자 성함을 입력해 주세요.' });
@@ -175,6 +176,7 @@ const server = http.createServer(async (req, res) => {
           birth,
           vipCode,
           smsOptIn,
+          industry,
         provider: 'email',
         createdAt: now,
         lastLoginAt: now
