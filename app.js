@@ -2540,7 +2540,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       provider: userObj.provider || 'email',
       createdAt: userObj.createdAt || new Date().toISOString()
     };
-    ['termsAgreedAt', 'marketingOptIn', 'marketingConsentAt'].forEach((k) => {
+    ['termsAgreedAt', 'marketingOptIn', 'marketingConsentAt', 'consentVersion'].forEach((k) => {
       if (userObj[k] !== undefined && userObj[k] !== '') record[k] = userObj[k];
     });
     if (idx >= 0) {
@@ -3245,9 +3245,9 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   const linkGotoLogin = document.getElementById('link-goto-login-from-choice');
 
   if (btnChoiceGeneral) btnChoiceGeneral.addEventListener('click', () => window.showSignupStep('terms'));
-  if (btnChoiceKakao) btnChoiceKakao.addEventListener('click', () => handleRealKakaoLogin());
-  if (btnChoiceNaver) btnChoiceNaver.addEventListener('click', () => handleRealNaverLogin());
-  if (btnChoiceGoogle) btnChoiceGoogle.addEventListener('click', () => handleRealGoogleLogin());
+  if (btnChoiceKakao) btnChoiceKakao.addEventListener('click', () => handleRealKakaoLogin({ forceConsent: true }));
+  if (btnChoiceNaver) btnChoiceNaver.addEventListener('click', () => handleRealNaverLogin({ forceConsent: true }));
+  if (btnChoiceGoogle) btnChoiceGoogle.addEventListener('click', () => handleRealGoogleLogin({ forceConsent: true }));
   if (linkGotoLogin && tabLogin) {
     linkGotoLogin.addEventListener('click', (e) => {
       e.preventDefault();
@@ -3708,10 +3708,34 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
   // --- Native Google / Naver / Kakao Account Chooser Sheet (Matches Rinnai Mobile Screen) ---
   const KAKAO_JS_KEY = '37cf83af5b8e6b8cd60edf673d87b631';
+  let socialAuthForceConsent = false;
+
+  function setSocialConsentMode(force) {
+    socialAuthForceConsent = Boolean(force);
+    try {
+      if (force) {
+        sessionStorage.setItem('mm_social_force_consent', '1');
+      } else {
+        sessionStorage.removeItem('mm_social_force_consent');
+      }
+    } catch (e) {}
+  }
+
+  function consumeSocialConsentMode() {
+    let force = socialAuthForceConsent;
+    socialAuthForceConsent = false;
+    try {
+      if (sessionStorage.getItem('mm_social_force_consent') === '1') {
+        force = true;
+      }
+      sessionStorage.removeItem('mm_social_force_consent');
+    } catch (e) {}
+    return force;
+  }
 
   function initKakaoSDK() {
     try {
-      if (window.Kakao && !window.Kakao.isInitialized()) {
+      if (window.Kakao && typeof window.Kakao.init === 'function' && !window.Kakao.isInitialized()) {
         window.Kakao.init(KAKAO_JS_KEY);
       }
     } catch (e) {
@@ -3720,14 +3744,12 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
 
   if (typeof window !== 'undefined') {
-    if (window.Kakao) {
-      initKakaoSDK();
-    } else {
-      window.addEventListener('load', initKakaoSDK);
-    }
+    initKakaoSDK();
+    window.addEventListener('load', initKakaoSDK);
   }
 
-  function handleRealKakaoLogin() {
+  function handleRealKakaoLogin(opts = {}) {
+    setSocialConsentMode(Boolean(opts.forceConsent));
     initKakaoSDK();
     if (!window.Kakao || typeof window.Kakao.Auth?.login !== 'function') {
       openNativeOAuthSheet('카카오톡(Kakao)');
@@ -3736,25 +3758,28 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
 
     try {
       window.Kakao.Auth.login({
-        scope: 'profile_nickname,account_email',
         success: function(authObj) {
           window.Kakao.API.request({
             url: '/v2/user/me',
             success: function(res) {
               const kakaoAccount = res.kakao_account || {};
-              const profile = kakaoAccount.profile || {};
+              const profile = kakaoAccount.profile || res.properties || {};
               const userName = profile.nickname || '카카오 회원';
-              const userEmail = kakaoAccount.email || `kakao_${res.id}@marketingmap.kr`;
+              const userEmail = kakaoAccount.email || `kakao_${res.id || Date.now()}@social.marketingmap.kr`;
               completeOAuthSignIn('카카오톡(Kakao)', userName, userEmail, { providerKey: 'kakao', accessToken: authObj.access_token });
             },
             fail: function(error) {
-              console.error(error);
+              console.error('Kakao /v2/user/me error:', error);
               openNativeOAuthSheet('카카오톡(Kakao)');
             }
           });
         },
         fail: function(err) {
-          console.error(err);
+          console.warn('Kakao Auth.login fail/cancel:', err);
+          const errStr = JSON.stringify(err || '');
+          if (/access_denied|popup_closed|cancel/i.test(errStr)) {
+            return;
+          }
           openNativeOAuthSheet('카카오톡(Kakao)');
         }
       });
@@ -3783,7 +3808,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       const payload = parseJwt(response.credential);
       if (payload) {
         const userName = payload.name || '구글 회원';
-        const userEmail = payload.email || `google_user@gmail.com`;
+        const userEmail = payload.email || 'google_user@gmail.com';
         completeOAuthSignIn('Google', userName, userEmail, { providerKey: 'google', idToken: response.credential });
       }
     }
@@ -3834,16 +3859,18 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
 
   if (typeof window !== 'undefined') {
+    initGoogleSDK();
     window.addEventListener('load', () => {
       initGoogleSDK();
     });
   }
 
-  function handleRealGoogleLogin() {
+  function handleRealGoogleLogin(opts = {}) {
+    setSocialConsentMode(Boolean(opts.forceConsent));
     initGoogleSDK();
     if (googleTokenClient) {
       try {
-        googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+        googleTokenClient.requestAccessToken({ prompt: 'select_account consent' });
         return;
       } catch (e) {
         console.warn('Request access token error:', e);
@@ -3855,21 +3882,35 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // --- Naver Official SDK Real Login ---
   const NAVER_CLIENT_ID = 'j5YHum84smI_wsFW4QWq';
   let naverLoginInstance = null;
+  let naverCallbackHandled = false;
+
+  function getNaverCallbackUrl() {
+    if (typeof window === 'undefined') return 'https://inewscom100454-spec.github.io/marketingmap/';
+    const host = window.location.hostname;
+    if (host === 'inewscom100454-spec.github.io') {
+      return 'https://inewscom100454-spec.github.io/marketingmap/';
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:3000/';
+    }
+    const base = window.location.href.split('#')[0].split('?')[0].replace(/\/index\.html$/i, '/');
+    return base.endsWith('/') ? base : base + '/';
+  }
 
   function initNaverSDK() {
     try {
       if (typeof window !== 'undefined' && window.naver && window.naver.LoginWithNaverId) {
         if (!naverLoginInstance) {
-          const currentUrl = window.location.href.split('#')[0].split('?')[0];
+          const callbackUrl = getNaverCallbackUrl();
           naverLoginInstance = new window.naver.LoginWithNaverId({
             clientId: NAVER_CLIENT_ID,
-            callbackUrl: currentUrl,
+            callbackUrl: callbackUrl,
             isPopup: true,
             loginButton: { color: "green", type: 1, height: 40 }
           });
           naverLoginInstance.init();
-          checkNaverLoginCallback();
         }
+        checkNaverLoginCallback();
       }
     } catch (e) {
       console.warn('Naver SDK init error:', e);
@@ -3884,33 +3925,88 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     }
   }
 
+  function fetchNaverProfileJsonp(accessToken) {
+    return new Promise((resolve, reject) => {
+      const cbName = '_naverProfileCb_' + Math.floor(Math.random() * 1e6) + '_' + Date.now();
+      const script = document.createElement('script');
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error('Naver profile JSONP timeout'));
+      }, 6000);
+      function cleanup() {
+        clearTimeout(timer);
+        try { delete window[cbName]; } catch (e) { window[cbName] = null; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[cbName] = function(data) {
+        cleanup();
+        if (data && data.resultcode === '00' && data.response) {
+          resolve(data.response);
+        } else {
+          reject(new Error('Naver profile error'));
+        }
+      };
+      script.onerror = function() {
+        cleanup();
+        reject(new Error('Naver profile script error'));
+      };
+      script.src = `https://openapi.naver.com/v1/nid/me?access_token=${encodeURIComponent(accessToken)}&oauth_callback=${cbName}`;
+      (document.head || document.body || document.documentElement).appendChild(script);
+    });
+  }
+
+  function deliverNaverAuthResult(name, email, accessToken) {
+    if (naverCallbackHandled) return;
+    naverCallbackHandled = true;
+    if (window.opener) {
+      try {
+        window.opener.postMessage({
+          type: 'NAVER_LOGIN_SUCCESS',
+          name: name,
+          email: email,
+          accessToken: accessToken
+        }, window.location.origin);
+      } catch (e) {}
+      window.close();
+    } else {
+      completeOAuthSignIn('네이버(NAVER)', name, email, { providerKey: 'naver', accessToken: accessToken });
+      if (history.replaceState) {
+        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      }
+    }
+  }
+
   function checkNaverLoginCallback() {
     try {
-      if (!naverLoginInstance) return;
-      if (window.location.hash.includes('access_token')) {
+      if (naverCallbackHandled) return;
+      if (!window.location.hash.includes('access_token')) return;
+      const token = naverAccessTokenFromHash();
+      if (!token) return;
+
+      const fallbackFetch = () => {
+        fetchNaverProfileJsonp(token)
+          .then((resp) => {
+            const email = resp.email || `naver_${resp.id || Date.now()}@naver.com`;
+            const name = resp.name || resp.nickname || '네이버 회원';
+            deliverNaverAuthResult(name, email, token);
+          })
+          .catch(() => {
+            deliverNaverAuthResult('네이버 회원', `naver_${Date.now()}@naver.com`, token);
+          });
+      };
+
+      if (naverLoginInstance && typeof naverLoginInstance.getLoginStatus === 'function') {
         naverLoginInstance.getLoginStatus(function (status) {
-          if (status) {
-            const email = naverLoginInstance.user.getEmail() || `naver_user@naver.com`;
+          if (status && naverLoginInstance.user) {
+            const email = naverLoginInstance.user.getEmail() || `naver_${naverLoginInstance.user.getId() || Date.now()}@naver.com`;
             const name = naverLoginInstance.user.getName() || naverLoginInstance.user.getNickName() || '네이버 회원';
-            
-            if (window.opener) {
-              try {
-                window.opener.postMessage({
-                  type: 'NAVER_LOGIN_SUCCESS',
-                  name: name,
-                  email: email,
-                  accessToken: naverAccessTokenFromHash()
-                }, window.location.origin);
-              } catch (e) {}
-              window.close();
-            } else {
-              completeOAuthSignIn('네이버(NAVER)', name, email, { providerKey: 'naver', accessToken: naverAccessTokenFromHash() });
-              if (history.replaceState) {
-                history.replaceState(null, document.title, window.location.pathname + window.location.search);
-              }
-            }
+            deliverNaverAuthResult(name, email, token);
+          } else {
+            fallbackFetch();
           }
         });
+      } else {
+        fallbackFetch();
       }
     } catch (e) {
       console.warn('checkNaverLoginCallback error:', e);
@@ -3918,6 +4014,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
 
   if (typeof window !== 'undefined') {
+    initNaverSDK();
     window.addEventListener('load', () => {
       initNaverSDK();
     });
@@ -3930,19 +4027,25 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     });
   }
 
-  function handleRealNaverLogin() {
+  function handleRealNaverLogin(opts = {}) {
+    setSocialConsentMode(Boolean(opts.forceConsent));
     initNaverSDK();
-    const naverBtn = document.querySelector('#naverIdLogin a') || document.querySelector('#naverIdLogin_loginButton');
-    if (naverBtn) {
-      naverBtn.click();
+    if (!window.naver || !window.naver.LoginWithNaverId) {
+      openNativeOAuthSheet('네이버(NAVER)');
       return;
     }
 
-    const callbackUrl = window.location.href.split('#')[0].split('?')[0];
-    const state = Math.random().toString(36).substring(2, 15);
-    sessionStorage.setItem('naver_oauth_state', state);
-    const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}`;
-    window.open(authUrl, 'naverLoginPopup', 'width=520,height=650');
+    const callbackUrl = getNaverCallbackUrl();
+    const state = (naverLoginInstance && typeof naverLoginInstance.generateState === 'function')
+      ? naverLoginInstance.generateState()
+      : Math.random().toString(36).substring(2, 15);
+    try { localStorage.setItem('com.naver.nid.oauth.state_token', state); } catch (e) {}
+    try { sessionStorage.setItem('naver_oauth_state', state); } catch (e) {}
+    const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=token&client_id=${NAVER_CLIENT_ID}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(callbackUrl)}&version=js-2.0.2`;
+    const popup = window.open(authUrl, 'naver_login', 'titlebar=1,resizable=1,scrollbars=yes,width=520,height=650');
+    if (!popup) {
+      openNativeOAuthSheet('네이버(NAVER)');
+    }
   }
 
   // 실제 소셜 인증(SDK)을 불러오지 못한 경우: 임의 계정으로 로그인시키지 않고 안내만 표시한다.
@@ -3953,22 +4056,30 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   async function completeOAuthSignIn(provider, name, email, credential) {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanName = (name || '').trim();
+    const forceConsent = consumeSocialConsentMode();
 
-    // 이미 가입된 회원이면 바로 로그인, 신규 회원이면 약관·마케팅 동의 단계를 먼저 거친다.
-    let isExistingMember = getLocalUsersDb().some((u) => u.email.toLowerCase() === cleanEmail);
-    if (!isExistingMember) {
+    // 회원가입(STEP 1/3)에서 시작하기를 클릭한 경우에는 무조건 약관·마케팅 동의 단계(STEP 2/3)를 거친다.
+    if (forceConsent) {
+      openSocialConsentGate({ provider, name: cleanName, email: cleanEmail, credential });
+      return;
+    }
+
+    // 로그인 탭에서 호출된 경우에도 약관 동의 이력(consentVersion >= 2)이 없으면 약관·마케팅 동의 단계를 먼저 거친다.
+    const existingLocal = getLocalUsersDb().find((u) => u.email.toLowerCase() === cleanEmail);
+    let isConsentedExistingMember = Boolean(existingLocal && existingLocal.termsAgreedAt && existingLocal.consentVersion >= 2);
+    if (!isConsentedExistingMember && !existingLocal) {
       try {
         const resp = await fetch('/api/auth/check-email?email=' + encodeURIComponent(cleanEmail));
         if (resp.ok) {
           const data = await resp.json();
-          isExistingMember = data.available === false;
+          isConsentedExistingMember = data.available === false;
         }
       } catch (e) {
         // 서버 API가 없는 정적 호스팅에서는 로컬 DB 결과만 사용
       }
     }
 
-    if (isExistingMember) {
+    if (isConsentedExistingMember) {
       return finalizeOAuthSignIn(provider, cleanName, cleanEmail, { credential });
     }
     openSocialConsentGate({ provider, name: cleanName, email: cleanEmail, credential });
@@ -3988,6 +4099,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
     };
     if (opts.termsAgreed) {
       socialUser.termsAgreedAt = consentAt;
+      socialUser.consentVersion = 2;
       socialUser.marketingOptIn = Boolean(opts.marketingOptIn);
       socialUser.marketingConsentAt = opts.marketingOptIn ? consentAt : '';
     }
@@ -4038,15 +4150,15 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   // Circular social buttons event binding
   const btnCircleGoogle = document.getElementById('btn-circle-google');
   if (btnCircleGoogle) {
-    btnCircleGoogle.addEventListener('click', () => handleRealGoogleLogin());
+    btnCircleGoogle.addEventListener('click', () => handleRealGoogleLogin({ forceConsent: false }));
   }
   const btnCircleNaver = document.getElementById('btn-circle-naver');
   if (btnCircleNaver) {
-    btnCircleNaver.addEventListener('click', () => handleRealNaverLogin());
+    btnCircleNaver.addEventListener('click', () => handleRealNaverLogin({ forceConsent: false }));
   }
   const btnCircleKakao = document.getElementById('btn-circle-kakao');
   if (btnCircleKakao) {
-    btnCircleKakao.addEventListener('click', () => handleRealKakaoLogin());
+    btnCircleKakao.addEventListener('click', () => handleRealKakaoLogin({ forceConsent: false }));
   }
 
   // --- 1:1 Floating Support Chatbot ---
