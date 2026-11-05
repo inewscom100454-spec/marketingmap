@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css?v=20261104_09">
+  <link rel="stylesheet" href="index.css?v=20261105_01">
 </head>
 <body>
   <!-- Background Glow Effects -->
@@ -70,29 +70,6 @@
 
     <!-- Main Content Area -->
     <main class="main-layout">
-      <!-- App Sidebar (Dedicated Far Left Panel) -->
-      <aside class="app-sidebar" id="app-sidebar">
-        <button id="btn-new-chat" class="btn-new-chat" type="button" title="새 상담 시작">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span class="sidebar-text">새 상담 시작</span>
-        </button>
-        <div class="chat-search-container">
-          <input type="text" id="chat-search" placeholder="상담 내역 검색...">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </div>
-        <div class="chat-history-container">
-          <div class="history-label sidebar-text">최근 상담 이력</div>
-          <div id="chat-history-list" class="chat-history-list">
-            <!-- Generated dynamically -->
-          </div>
-        </div>
-      </aside>
       <!-- Left Column: Input Form -->
       <section class="form-container glass-panel">
         <div class="panel-header">
@@ -106,67 +83,6 @@
           <span>대한민국 모든 대표님의 비즈니스 성장을 위한 AI 마케팅 솔루션</span>
         </p>
         
-        <!-- AI Ideator Section -->
-        <div class="ideator-section">
-          <div class="ideator-header">
-            <button id="btn-toggle-sidebar" class="btn-toggle-sidebar" title="상담 이력 열기/닫기" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;">
-              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .3 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
-              <line x1="9" y1="18" x2="15" y2="18"></line>
-              <line x1="10" y1="22" x2="14" y2="22"></line>
-            </svg>
-            <h3>우리 비즈니스 맞춤 마케팅 빠른 상담</h3>
-          </div>
-          <div class="ideator-body">
-            <div id="ideator-response" class="ideator-response-box">
-              <div class="chat-welcome-container">
-                <div class="welcome-header">
-                  <div class="welcome-avatar">A</div>
-                  <h4>오드리 AI 마케팅 비서와 상담을 시작합니다</h4>
-                  <p>우리 비즈니스 홍보 고민을 아래 입력창에 질문하시거나,<br>추천 카드를 클릭해 바로 적용 가능한 마케팅 비법을 받아보세요.</p>
-                </div>
-                <div class="quick-prompt-cards">
-                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('중계동 고깃집(오드리고깃집)처럼 외식·프랜차이즈·로컬 비즈니스 고객 유입을 늘리고 네이버 플레이스 순위와 재방문율을 올리는 실전 마케팅 전략 추천해줘')">
-                    <div class="quick-card-icon">🥩</div>
-                    <div class="quick-card-text">
-                      <strong>외식 · 프랜차이즈 · 로컬 비즈니스</strong>
-                      <span>플레이스 상위노출 & 가족·모임 단골 확보 전략</span>
-                    </div>
-                  </button>
-                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('병의원, 부동산, 뷰티, 교육 등 예약·상담 중심 비즈니스에서 지역 핵심 키워드 장악과 신규 상담·예약을 늘리는 마케팅 전략 추천해줘')">
-                    <div class="quick-card-icon">🏥</div>
-                    <div class="quick-card-text">
-                      <strong>병의원 · 부동산 · 뷰티 · 예약 비즈니스</strong>
-                      <span>지역 핵심 검색어 선점 & 신규 상담·예약 전환 전략</span>
-                    </div>
-                  </button>
-                  <button type="button" class="quick-card" onclick="window.sendQuickPrompt('이커머스 브랜드, 제조업, B2B 전문 기업이 검색 SEO와 설득력 있는 콘텐츠로 구매 전환율 및 B2B 문의를 높이는 전략 추천해줘')">
-                    <div class="quick-card-icon">🏭</div>
-                    <div class="quick-card-text">
-                      <strong>이커머스 · 제조 · B2B · 전문 브랜드</strong>
-                      <span>검색 키워드 유입 & 상세페이지·도입 문의 전환 전략</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="ideator-input-container">
-              <input type="text" id="ideator-input" placeholder="예: 중계동 고깃집 재방문율 높이는 이벤트 추천해줘">
-              <button id="btn-discuss-idea" type="button" class="btn-send-icon" title="마케팅 질문 전송">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
 
         <form id="blueprint-form">
           <div class="form-row-2col">
@@ -361,6 +277,20 @@
                 <span>보관함 저장</span>
               </button>
             </div>
+          </div>
+
+          <!-- First Hook: 비회원에게 가입 안내 (첫 전략 생성 직후, 로그인하면 자동으로 숨김) -->
+          <div id="guest-signup-hook-banner" class="marketing-gift-hook-banner" style="display: none;">
+            <div class="gift-banner-left">
+              <span class="gift-banner-emoji">💾</span>
+              <div class="gift-banner-texts">
+                <strong>이 전략은 지금 이 브라우저에만 임시 보관되어 있어요</strong>
+                <span>무료 가입하면 보관함 저장 · PDF 출력 · 무제한 이용이 가능합니다. 방금 만든 전략은 그대로 이어집니다.</span>
+              </div>
+            </div>
+            <button type="button" class="btn-claim-gift-optin" onclick="window.openSignupFromHook()">
+              <span>3초 무료 가입</span>
+            </button>
           </div>
 
           <!-- Second Hook: Marketing Opt-in Gift Banner for Leads -->
@@ -1668,7 +1598,6 @@
             <div class="plan-price">19,000원<span>/ 월</span></div>
             <ul>
               <li><strong>실시간 Gemini · GPT-4o 정밀 분석</strong></li>
-              <li><strong>오드리 AI 비서 1:1 무제한 맞춤 상담</strong></li>
               <li>고전환 블로그·릴스·당근 원고 무제한</li>
               <li>AI 검색(GEO) 1순위 추천 문답 고도화</li>
               <li>마케팅 보관함 무제한 & 캠페인 비교</li>
@@ -1814,6 +1743,6 @@
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
-  <script src="app.js?v=20261104_09"></script>
+  <script src="app.js?v=20261105_01"></script>
 </body>
 </html>
