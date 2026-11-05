@@ -781,6 +781,11 @@ const server = http.createServer(async (req, res) => {
       } else {
         user.lastLoginAt = now;
         if (!user.name && identity.name) user.name = identity.name;
+        if (termsAgreed) {
+          user.termsAgreedAt = now;
+          user.marketingOptIn = marketingOptIn;
+          user.marketingConsentAt = marketingOptIn ? now : null;
+        }
       }
       saveUsers(users);
 
