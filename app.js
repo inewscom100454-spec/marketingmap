@@ -635,14 +635,14 @@ ${cfg.diag}
   const ideatorInput = document.getElementById('ideator-input');
   const ideatorResponse = document.getElementById('ideator-response');
 
-  ideatorInput.addEventListener('keydown', (e) => {
+  if (ideatorInput) ideatorInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       btnDiscussIdea.click();
     }
   });
 
-  btnDiscussIdea.addEventListener('click', async () => {
+  if (btnDiscussIdea) btnDiscussIdea.addEventListener('click', async () => {
     const promptText = ideatorInput.value.trim();
     if (!promptText) return;
 
@@ -2241,6 +2241,7 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
         
         renderBlueprint(blueprintResult, brand, category, idea, region, target);
         addBlueprintToArchive(brand, category, idea, region, target, revenue, blueprintResult);
+        updateMarketingGiftBanner();
 
         if (!isLoggedIn) {
           guestGenCount++;
@@ -2833,6 +2834,8 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
   }
 
   function updateMarketingGiftBanner() {
+    const guestHook = document.getElementById('guest-signup-hook-banner');
+    if (guestHook) guestHook.style.display = (localStorage.getItem('is_logged_in') !== 'true' && generatedData) ? 'flex' : 'none';
     const banner = document.getElementById('marketing-gift-hook-banner');
     if (!banner) return;
     const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
@@ -2843,6 +2846,10 @@ HTML 태그는 포함하지 말고 친절하고 전문성 있게 한국어로 �
       banner.style.display = 'none';
     }
   }
+
+  window.openSignupFromHook = function() {
+    showLoginModal('💾 방금 만든 마케팅 전략을 내 보관함에 저장하려면 무료 가입이 필요해요. 가입 후에도 이 전략은 그대로 이어집니다.', 'register');
+  };
 
   window.claimMarketingOptInGift = async function() {
     let profile = getCurrentUserProfile();
