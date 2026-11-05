@@ -32,6 +32,214 @@ const NAVER_API_BASE = process.env.NAVER_API_BASE || 'https://openapi.naver.com'
 const SOCIAL_PLACEHOLDER_DOMAIN = 'social.marketingmap.kr'; // 제공사가 이메일을 주지 않을 때 쓰는 내부용 주소 (이메일 가입에서는 사용 금지)
 const PROVIDER_LABELS = { kakao: '카카오톡(Kakao)', google: 'Google', naver: '네이버(NAVER)', email: '이메일' };
 
+// --- 오드리 고객지원 AI 챗봇 설정 (.env 환경변수 연동) ---
+const GEMINI_API_BASE = process.env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com';
+const OPENAI_API_BASE = process.env.OPENAI_API_BASE || 'https://api.openai.com';
+const AUDREY_SYSTEM_INSTRUCTION =
+  '당신은 BuildMap 서비스 및 마케팅 전략 관련 질문에 친절하고 전문적으로 답하는 비즈니스 어시스턴트 오드리입니다. ' +
+  '소상공인·자영업자·스타트업·프랜차이즈 대표님들의 비즈니스 성장을 돕기 위해 다음 원칙에 따라 답변하세요:\n' +
+  '1. BuildMap(MarketingMap) 서비스 안내: 좌측 입력폼에 ①상호명, ②업종 및 주력상품, ③지역(상권)/판매채널, ④강점 및 주요 고객층, ⑤마케팅 고민을 입력하고 [맞춤 마케팅 전략 생성하기] 버튼을 누르면 우측에 5대 핵심 리포트(플레이스 SEO, AI 검색 AEO·GEO, 채널별 홍보 원고, 경쟁사·자사 분석, 브랜드 스토리)가 즉시 생성되며 원클릭 복사와 PDF 리포트 다운로드가 가능함을 안내합니다.\n' +
+  '2. 실전 마케팅 전략 자문: 네이버 플레이스 상위노출, 블로그·인스타그램 릴스·유튜브 쇼츠·당근마켓 지역 광고, AI 검색(챗GPT·퍼플렉시티·네이버 AI 브리핑) 추천 선점, 객단가·재방문율 향상, 리뷰 이벤트 설계 등 질문에 업종·상권 맞춤형 실전 팁과 실행 순서를 구체적으로 제시합니다.\n' +
+  '3. 대화 맥락 유지: 이전 대화 내역(history)을 기억하여 후속 질문에도 문맥이 자연스럽게 이어지도록 답변하고, 핵심 포인트는 읽기 쉽게 줄바꿈과 강조 표시(**굵게**)를 활용해 간결하고 정중하게 전달합니다.';
+
+function sanitizeChatHistory(rawHistory) {
+  if (!Array.isArray(rawHistory)) return [];
+  return rawHistory
+    .slice(-20)
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const roleRaw = String(item.role || '').toLowerCase();
+      const role = (roleRaw === 'assistant' || roleRaw === 'model' || roleRaw === 'bot') ? 'assistant' : 'user';
+      const content = String(item.content || item.text || '').trim().slice(0, 2000);
+      if (!content) return null;
+      return { role, content };
+    })
+    .filter(Boolean);
+}
+
+function buildContextPromptPrefix(context) {
+  if (!context || typeof context !== 'object') return '';
+  const parts = [];
+  if (context.brand) parts.push(`상호명: ${String(context.brand).trim()}`);
+  if (context.category) parts.push(`업종: ${String(context.category).trim()}`);
+  if (context.idea) parts.push(`주력상품/메뉴: ${String(context.idea).trim()}`);
+  if (context.region) parts.push(`지역/상권: ${String(context.region).trim()}`);
+  if (context.target) parts.push(`강점/타깃: ${String(context.target).trim()}`);
+  if (context.revenue) parts.push(`현재 마케팅 고민: ${String(context.revenue).trim()}`);
+  return parts.length > 0 ? `[현재 대표님이 입력 중인 비즈니스 정보: ${parts.join(' | ')}]\n\n` : '';
+}
+
+async function callGeminiChatApi({ apiKey, model, message, history, context }) {
+  const targetModel = (model || process.env.GEMINI_MODEL || 'gemini-2.5-flash').trim();
+  const base = (process.env.GEMINI_API_BASE || GEMINI_API_BASE).replace(/\/+$/, '');
+  const url = `${base}/v1beta/models/${encodeURIComponent(targetModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  const contents = [];
+  for (const turn of history) {
+    contents.push({
+      role: turn.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: turn.content }]
+    });
+  }
+  const prefix = buildContextPromptPrefix(context);
+  contents.push({
+    role: 'user',
+    parts: [{ text: prefix + message }]
+  });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: AUDREY_SYSTEM_INSTRUCTION }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024
+        }
+      }),
+      signal: controller.signal
+    });
+    if (!resp.ok) {
+      const errBody = await resp.json().catch(() => ({}));
+      throw new Error(errBody.error?.message || `Gemini API status ${resp.status}`);
+    }
+    const data = await resp.json();
+    const reply = data.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('').trim();
+    if (!reply) throw new Error('Empty Gemini response');
+    return { reply, provider: 'gemini', model: targetModel };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function callOpenAIChatApi({ apiKey, model, message, history, context }) {
+  const targetModel = (model || process.env.OPENAI_MODEL || 'gpt-4o-mini').trim();
+  const base = (process.env.OPENAI_API_BASE || OPENAI_API_BASE).replace(/\/+$/, '');
+  const url = `${base}/v1/chat/completions`;
+
+  const prefix = buildContextPromptPrefix(context);
+  const messages = [
+    { role: 'system', content: AUDREY_SYSTEM_INSTRUCTION },
+    ...history.map((turn) => ({
+      role: turn.role === 'assistant' ? 'assistant' : 'user',
+      content: turn.content
+    })),
+    { role: 'user', content: prefix + message }
+  ];
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: targetModel,
+        messages,
+        temperature: 0.7
+      }),
+      signal: controller.signal
+    });
+    if (!resp.ok) {
+      const errBody = await resp.json().catch(() => ({}));
+      throw new Error(errBody.error?.message || `OpenAI API status ${resp.status}`);
+    }
+    const data = await resp.json();
+    const reply = (data.choices?.[0]?.message?.content || '').trim();
+    if (!reply) throw new Error('Empty OpenAI response');
+    return { reply, provider: 'openai', model: targetModel };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function buildAudreyAssistantReply(message, history = [], context = {}) {
+  const q = String(message || '').trim();
+  const qLower = q.toLowerCase();
+  const prevUserTurns = history.filter((h) => h.role === 'user').map((h) => h.content);
+  const combinedContextText = [
+    context.brand || '',
+    context.category || '',
+    context.idea || '',
+    context.region || '',
+    ...prevUserTurns,
+    q
+  ].join(' ');
+
+  // 이전 대화나 현재 질문에서 업종/비즈니스 힌트 추출
+  let detectedBiz = (context.brand || context.idea || context.category || '').trim();
+  if (!detectedBiz) {
+    const bizMatch = combinedContextText.match(/(고깃집|삼겹살|음식점|식당|카페|베이커리|디저트|술집|이자카야|미용실|헤어샵|네일|필라테스|헬스장|PT|학원|교습소|병원|치과|한의원|성형외과|피부과|부동산|인테리어|쇼핑몰|스마트스토어|프랜차이즈|스타트업|B2B|변호사|세무사|노무사)/);
+    if (bizMatch) detectedBiz = bizMatch[1];
+  }
+  const bizPrefix = detectedBiz ? `**${detectedBiz}** 비즈니스 맥락을 기준으로 ` : '';
+
+  if (/^(안녕|안녕하세요|반가워|하이|hello|hi|오드리)/i.test(q) && q.length < 18) {
+    return `안녕하세요 대표님! **BuildMap 비즈니스 어시스턴트 오드리**입니다. 😊\n\n${detectedBiz ? `현재 관심 있으신 **${detectedBiz}** 마케팅 전략부터 ` : ''}**네이버 플레이스 SEO, 블로그·릴스·쇼츠 콘텐츠, AI 검색(챗GPT·네이버 AI 브리핑) 노출, 예산별 광고 운영, BuildMap Studio 활용법**까지 무엇이든 편하게 물어보세요!`;
+  }
+
+  if (/누구|정체|무슨s*일|역할|어떤s*봇/.test(qLower)) {
+    return `저는 **BuildMap 서비스 및 마케팅 전략 관련 질문에 친절하고 전문적으로 답하는 비즈니스 어시스턴트 오드리**입니다! 💡\n\n- **BuildMap Studio 활용 안내**: 5대 마케팅 리포트 생성, 원클릭 복사, PDF 저장, 계정·API 연동\n- **맞춤형 마케팅 전략 자문**: 업종·상권별 플레이스 상위노출, 숏폼·블로그 콘텐츠, AI 검색(GEO) 선점, 객단가·단골 확대 전략\n\n현재 고민 중인 업종이나 마케팅 채널을 말씀해 주시면 맞춤 실행 플랜을 바로 제안해 드릴게요.`;
+  }
+
+  if (/apis*키|apis*설정|키s*오류|.env|엔진s*설정|제미나이|gemini|openai|gpt/.test(qLower)) {
+    return `🔑 **BuildMap AI 엔진 & API 연동 안내**입니다.\n\n1. **별도 키 없이 즉시 사용**: 기본 탑재된 **[오드리 로컬 마케팅 엔진]**으로 실행하시면 API 키 없이도 업종·상권 맞춤 5대 마케팅 전략 리포트가 무료로 생성됩니다.\n2. **실시간 AI 엔진 연동**: 서버의 **.env** 파일에 **GEMINI_API_KEY** 또는 **OPENAI_API_KEY**를 설정하시거나, 화면 우측 상단 **[AI 엔진 설정]** 버튼에서 키를 입력하시면 실시간 생성형 AI 엔진으로 연동됩니다.\n\n추가로 설정 중 막히는 부분이 있으시면 말씀해 주세요!`;
+  }
+
+  if (/요금|가격|결제|무료|유료|보관함|저장|회원가입/.test(qLower)) {
+    return `💳 **BuildMap 요금제 및 리포트 보관 안내**입니다.\n\n- **첫 1회 무료 체험**: 비회원도 접속 즉시 첫 번째 맞춤 마케팅 전략 리포트를 무료로 생성·열람하실 수 있습니다.\n- **무료 회원가입 혜택**: 3초 간편가입(이메일·카카오·네이버·Google)만 완료하시면 **무제한 리포트 생성, 내 계정 영구 보관, 홍보 원고 원클릭 복사, PDF 다운로드**를 모두 무료로 이용하실 수 있습니다.`;
+  }
+
+  if (/사용법|사용s*방법|어떻게s*써|리포트s*생성|시작하는s*법/.test(qLower)) {
+    return `💻 **BuildMap Studio 100% 활용 가이드**입니다!\n\n1. 좌측 설계 폼에 **①상호명, ②업종/주력상품, ③지역(상권), ④강점/타깃 고객, ⑤마케팅 고민**을 입력합니다.\n2. 하단의 **[맞춤 마케팅 전략 생성하기]** 버튼을 클릭합니다.\n3. 우측 대시보드에 **①플레이스 SEO 키워드, ②AI 검색(AEO·GEO) Q&A, ③블로그·쇼츠·릴스·당근 홍보 원고, ④경쟁사·자사 분석, ⑤브랜드 스토리**가 즉시 완성됩니다.\n4. 마음에 드는 원고는 **[원클릭 복사]** 또는 **[PDF 리포트 다운로드]**로 바로 실전에 활용하세요!`;
+  }
+
+  if (/제휴|도입|다점포|프랜차이즈s*본사|대행사|엔터프라이즈|협업/.test(qLower)) {
+    return `🏢 **프랜차이즈·다점포·기관 제휴 도입 안내**입니다.\n\n가맹점별 상권 맞춤 마케팅 리포트 일괄 생성, 소상공인 교육 프로그램 도입, 마케팅 대행사 화이트라벨 제휴는 **support@marketingmap.kr**로 문의 주시면 전담 파트너팀이 맞춤 제안서를 안내해 드립니다.`;
+  }
+
+  if (/플레이스|스마트플레이스|지도|상위s*노출|순위|영수증s*리뷰|seo/.test(qLower)) {
+    return `📍 ${bizPrefix}**네이버 플레이스 상위노출(SEO) 핵심 3단계 전략**입니다.\n\n1. **대표 키워드 5개 조합 세팅**: '[지역명 + 세부메뉴/업종 + 방문목적(회식·데이트·혼밥 등)]' 조합으로 플레이스 대표 키워드와 상세 설명 첫 2줄을 구성하세요.\n2. **소식(새소식) 주 2회 정기 발행**: 단순 공지가 아닌 '이번 주 인기 메뉴·신규 혜택·예약 팁'을 검색 키워드와 함께 올리면 플레이스 활성도 점수가 빠르게 오릅니다.\n3. **사진 포함 영수증 리뷰 유도**: 테이블·카운터 안내문으로 고객이 직접 찍은 사진+키워드 리뷰를 유도하고, 사장님 답글에 매장 강점 키워드를 자연스럽게 포함해 주세요.\n\n더 구체적인 대표 키워드 리스트가 필요하시면 좌측 폼에서 전략 리포트를 생성해 보시거나 상권(지역)을 알려주세요!`;
+  }
+
+  if (/블로그|체험단|포스팅|원고|상위/.test(qLower)) {
+    return `✍️ ${bizPrefix}**검색 유입을 실제 방문으로 바꾸는 블로그 마케팅 전략**입니다.\n\n1. **초기에는 '세부 키워드(롱테일)' 공략**: 경쟁이 치열한 광역 키워드 대신 '[동네명 + 골목/역세권 + 메뉴/고민 해결]' 키워드로 상위 노출을 먼저 확보하세요.\n2. **후기형 + 정보형 원고 7:3 비율**: 고객 입장의 솔직 체험기(주차·좌석·시그니처 메뉴·가격표) 70%와 대표님의 전문성 칼럼(재료 손질·노하우) 30%를 조합하면 신뢰도가 극대화됩니다.\n3. **플레이스 지도 첨부 필수**: 본문 하단에 네이버 플레이스 지도와 예약 링크를 반드시 삽입해 검색 이탈을 막으세요.`;
+  }
+
+  if (/인스타|릴스|유튜브|쇼츠|숏폼|영상|틱톡|sns/.test(qLower)) {
+    return `🎬 ${bizPrefix}**알고리즘을 타는 15초 숏폼(릴스·쇼츠) 실전 공식**입니다.\n\n1. **첫 3초 후킹(Hook)**: 완성된 모습이나 가장 역동적인 순간(시즐감·비포애프터·핵심 질문)을 0~3초에 배치해 스크롤을 멈추게 하세요.\n2. **자막은 화면 중앙 상단 배치**: 소리 없이 보는 시청자가 많으므로 핵심 혜택과 위치 정보를 큼직한 자막으로 넣어주세요.\n3. **프로필 링크 & 고정 댓글 전환**: 영상 마지막에 '프로필 링크에서 첫 방문 쿠폰 받기' 또는 '댓글에 지역명 남기면 위치 DM 발송' 같은 명확한 행동 유도(CTA)를 넣으면 실제 매출로 직결됩니다.`;
+  }
+
+  if (/당근|동네|지역s*광고|단골|재방문|쿠폰|리뷰s*이벤트/.test(qLower)) {
+    return `🥕 ${bizPrefix}**반경 1.5km 진성 단골을 모으는 로컬 & 리텐션 전략**입니다.\n\n1. **당근마켓 비즈프로필 소식 발행**: 동네 주민이 바로 체감할 수 있는 '당근 단골 전용 웰컴 혜택'을 쿠폰으로 발행하고 단골 맺기를 유도하세요.\n2. **2회차 방문 골든타임 쿠폰**: 첫 방문 고객에게 '14일 이내 재방문 시 사용할 수 있는 시그니처 사이드/할인 혜택'을 제공하면 단골 전환율이 2배 이상 높아집니다.\n3. **체감 가치가 높은 리뷰 이벤트**: 원가는 낮고 고객 만족도는 높은 미니 시그니처 메뉴나 뽑기 이벤트를 활용하면 자발적인 고품질 리뷰가 쌓입니다.`;
+  }
+
+  if (/예산|비용|광고비|얼마|소액|10만원|적은s*돈/.test(qLower)) {
+    return `💰 ${bizPrefix}**월 예산 0원~10만 원대 고효율 마케팅 배분 플랜**입니다.\n\n1. **무료 자산화 (예산 0원)**: 네이버 플레이스 상세설명·대표키워드 최적화 + 주 2회 새소식 업로드 + 인스타그램/유튜브 주 2회 숏폼 업로드\n2. **매장 내 리뷰 전환 (월 3~5만 원)**: 테이블 QR 영수증 리뷰 이벤트용 서비스 원가 투자 (외부 대행 광고비보다 전환율이 5배 높습니다)\n3. **초정밀 타깃 광고 (월 5만 원)**: 당근마켓 동네 광고 또는 플레이스 클릭초이스를 피크타임(주말·저녁 등)에만 집중 집행\n\n현재 생각하시는 월 마케팅 예산 범위를 알려주시면 그에 딱 맞춘 주간 실행표를 짜드릴게요!`;
+  }
+
+  if (/ais*검색|챗gpt|chatgpt|퍼플렉시티|perplexity|aeo|geo|ais*브리핑/.test(qLower)) {
+    return `🤖 ${bizPrefix}**AI 검색(AEO·GEO: 챗GPT·퍼플렉시티·네이버 AI 브리핑) 추천 선점 전략**입니다.\n\n최근 고객들은 "강남역 단체 회식하기 좋은 고깃집 추천해줘"처럼 문장형으로 AI에게 질문합니다.\n1. **질문-답변(Q&A) 구조 콘텐츠 발행**: 블로그와 플레이스 소개글에 고객이 자주 묻는 질문(주차 가능 여부, 단체석 규모, 대표 메뉴 특징, 가격대)을 명확한 문장으로 작성하세요.\n2. **구체적 팩트 데이터 명시**: '맛있는 집' 대신 '72시간 저온 숙성 한돈, 40석 단독 룸 완비, 역 도보 3분'처럼 AI가 인용하기 좋은 수치·팩트를 명시하면 AI 추천 후보에 최우선 노출됩니다.`;
+  }
+
+  // 일반 마케팅/비즈니스 질문 또는 후속 질문에 대한 자연스러운 맞춤형 답변
+  const prevNote = prevUserTurns.length > 0
+    ? `앞서 말씀해주신 내용("${prevUserTurns[prevUserTurns.length - 1].slice(0, 35)}")에 이어 `
+    : '';
+
+  return `대표님, ${prevNote}${bizPrefix}질문해주신 **"${q}"**에 대한 오드리의 실전 마케팅 제안입니다! 💡\n\n1. **핵심 타깃 & 검색 접점 확보**: 고객이 우리 매장·서비스를 찾을 때 가장 먼저 검색하는 **[지역/상황 + 핵심 상품/강점]** 키워드를 네이버 플레이스와 블로그 제목에 일관되게 배치하세요.\n2. **시각적 신뢰 & 전환 장치**: 첫 방문 고객이 망설이지 않도록 대표 시그니처 상품의 고화질 비주얼과 **첫 이용 웰컴 혜택(또는 리뷰 이벤트)**을 상단에 고정해 문의·방문 전환율을 높이세요.\n3. **AI 검색(GEO) & 재방문 루프**: 고객이 자주 묻는 질문(가격·주차·예약·차별점)을 Q&A 형태로 정리해 두시면 네이버 AI 브리핑과 챗GPT 추천 노출에 매우 유리합니다.\n\n더 구체적인 **상권(지역), 주력 상품, 또는 목표 예산**을 편하게 말씀해 주시면 그에 맞춰 한 단계 더 깊이 있는 실행 전략을 안내해 드릴게요!`;
+}
+
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -562,6 +770,7 @@ const server = http.createServer(async (req, res) => {
   if (reqPath === '/api/auth/password-reset/request' && req.method === 'POST' && limited('rstr:' + ip, 10, 60 * 60 * 1000)) return;
   if (reqPath === '/api/auth/password-reset/confirm' && req.method === 'POST' && limited('rstc:' + ip, 20, 60 * 60 * 1000)) return;
   if (reqPath === '/api/auth/me' && req.method === 'GET' && limited('me:' + ip, 60, 10 * 60 * 1000)) return;
+  if (reqPath === '/api/chat' && req.method === 'POST' && limited('chat:' + ip, 60, 10 * 60 * 1000)) return;
 
   // --- AUTHENTICATION API ENDPOINTS ---
   if (reqPath === '/api/auth/check-email' && req.method === 'GET') {
@@ -984,6 +1193,81 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true, message: '회원 탈퇴가 완료되었습니다. 계정과 개인정보가 삭제되었습니다.' });
     } catch (err) {
       return sendJson(res, 500, { ok: false, message: '회원 탈퇴 처리 중 오류가 발생했습니다.' });
+    }
+  }
+
+  // --- AI SUPPORT CHATBOT ENDPOINT (/api/chat) ---
+  if (reqPath === '/api/chat' && req.method === 'POST') {
+    try {
+      const body = await parseRequestBody(req);
+      let message = String(body.message || '').trim();
+      let rawHistory = Array.isArray(body.history) ? body.history : [];
+      if (!message && Array.isArray(body.messages) && body.messages.length > 0) {
+        const lastMsg = body.messages[body.messages.length - 1];
+        message = String(lastMsg?.content || lastMsg?.text || '').trim();
+        rawHistory = body.messages.slice(0, -1);
+      }
+      if (!message) {
+        return sendJson(res, 400, { ok: false, message: '질문 내용을 입력해 주세요.' });
+      }
+      if (message.length > 2000) {
+        return sendJson(res, 400, { ok: false, message: '질문은 2,000자 이내로 입력해 주세요.' });
+      }
+
+      const history = sanitizeChatHistory(rawHistory);
+      const context = (body.context && typeof body.context === 'object') ? body.context : {};
+
+      // 1순위: 서버 환경변수(.env)에 설정된 API 키 참조
+      const envGeminiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').trim();
+      const envOpenaiKey = (process.env.OPENAI_API_KEY || '').trim();
+      const preferredProvider = (process.env.AI_PROVIDER || body.clientProvider || '').toLowerCase();
+
+      // 2순위: 클라이언트 AI 엔진 설정 모달에서 전달된 키(서버 .env 미설정 시 보조)
+      const clientApiKey = String(body.clientApiKey || '').trim();
+      const clientModel = String(body.clientModel || '').trim();
+
+      let result = null;
+      let upstreamError = null;
+
+      if (preferredProvider === 'openai' && envOpenaiKey) {
+        try {
+          result = await callOpenAIChatApi({ apiKey: envOpenaiKey, model: process.env.OPENAI_MODEL, message, history, context });
+        } catch (e) { upstreamError = e; }
+      }
+      if (!result && envGeminiKey) {
+        try {
+          result = await callGeminiChatApi({ apiKey: envGeminiKey, model: process.env.GEMINI_MODEL, message, history, context });
+        } catch (e) { upstreamError = e; }
+      }
+      if (!result && envOpenaiKey) {
+        try {
+          result = await callOpenAIChatApi({ apiKey: envOpenaiKey, model: process.env.OPENAI_MODEL, message, history, context });
+        } catch (e) { upstreamError = e; }
+      }
+      if (!result && clientApiKey) {
+        try {
+          if (preferredProvider === 'openai') {
+            result = await callOpenAIChatApi({ apiKey: clientApiKey, model: clientModel, message, history, context });
+          } else {
+            result = await callGeminiChatApi({ apiKey: clientApiKey, model: clientModel, message, history, context });
+          }
+        } catch (e) { upstreamError = e; }
+      }
+
+      if (!result) {
+        const fallbackReply = buildAudreyAssistantReply(message, history, context);
+        result = { reply: fallbackReply, provider: 'audrey-ai', model: 'audrey-business-v1' };
+      }
+
+      return sendJson(res, 200, {
+        ok: true,
+        reply: result.reply,
+        provider: result.provider,
+        model: result.model,
+        systemInstruction: AUDREY_SYSTEM_INSTRUCTION
+      });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, message: '오드리 챗봇 응답 처리 중 오류가 발생했습니다.' });
     }
   }
 
